@@ -1,0 +1,26 @@
+services:
+  backend:
+    container_name: remote_config_backend
+    build:
+        context: .
+    ports:
+        - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:8.0
+    container_name: remote_config_mongodb
+    expose:
+      - "27017"
+    ports:
+      - "27017:27017"
+    env_file:
+      - .env
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+    mongodb_data:
