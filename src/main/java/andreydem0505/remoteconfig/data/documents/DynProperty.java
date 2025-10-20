@@ -10,5 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class DynProperty {
     String username;
     String propertyName;
+    PropertyType type;
     Object data;
 }

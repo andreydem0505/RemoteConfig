@@ -1,0 +1,14 @@
+- Tests must be correct and logical, conforming to the actual class API.
+- Test environment must be described in `application-test.properties`. Tests must work in isolation with production environment.
+- Tests must cover all scenarios: positive, negative, and edge cases.
+- Non-existent methods must not be used.
+- Before and after each test, repositories must be cleared to ensure test independence.
+- There should be no duplicate checks or unnecessary logic.
+- Parametrized tests must be used where applicable to reduce code duplication.
+- Test data must be chosen deliberately and be realistic. Filler test data is unacceptable - it must carry meaning.
+- Test names must follow the testSomething_WhenSomething_ThenSomething format.
+- The message parameter in assertEquals, assertTrue, etc. must give developers a clear understanding of what is happening in the test.
+- Each test must be self-contained and easily readable.
+- There must be no unused variables.
+- Variable names must clearly indicate their content.
+- Code must adhere to common code style conventions. Line length should not exceed 120 characters, but unnecessary line breaks are undesirable.

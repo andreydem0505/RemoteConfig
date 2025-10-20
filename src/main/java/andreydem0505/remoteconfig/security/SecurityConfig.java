@@ -1,7 +1,7 @@
 package andreydem0505.remoteconfig.security;
 
 import andreydem0505.remoteconfig.controllers.Urls;
-import andreydem0505.remoteconfig.services.UsersService;
+import andreydem0505.remoteconfig.services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,8 +27,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(UsersService usersService, PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(usersService);
+    public AuthenticationProvider authenticationProvider(UserService userService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userService);
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }

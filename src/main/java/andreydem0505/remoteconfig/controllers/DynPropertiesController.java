@@ -1,7 +1,7 @@
 package andreydem0505.remoteconfig.controllers;
 
 import andreydem0505.remoteconfig.dto.DynPropertyDto;
-import andreydem0505.remoteconfig.services.DynPropertiesService;
+import andreydem0505.remoteconfig.services.DynPropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +12,22 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(Urls.PROPERTIES_URL)
 @RequiredArgsConstructor
 public class DynPropertiesController {
-    private final DynPropertiesService dynPropertiesService;
+    private final DynPropertyService dynPropertyService;
 
     @PostMapping
     public ResponseEntity<String> createDynProperty(@RequestBody DynPropertyDto data, Authentication authentication) {
-        dynPropertiesService.createDynProperty(authentication.getName(), data.getName(), data.getData());
-        return new ResponseEntity<>("Dyn property created", HttpStatus.CREATED);
+        dynPropertyService.createDynProperty(
+                authentication.getName(),
+                data.getName(),
+                data.getType(),
+                data.getData()
+        );
+        return new ResponseEntity<>("Dynamic property created", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{propertyName}")
+    public ResponseEntity<?> getDynPropertyData(@PathVariable String propertyName, Authentication authentication) {
+        Object result = dynPropertyService.getDynPropertyData(authentication.getName(), propertyName);
+        return ResponseEntity.ok(result);
     }
 }
