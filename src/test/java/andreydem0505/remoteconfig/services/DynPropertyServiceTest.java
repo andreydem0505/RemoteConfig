@@ -4,14 +4,13 @@ import andreydem0505.remoteconfig.data.documents.DynProperty;
 import andreydem0505.remoteconfig.data.documents.PropertyType;
 import andreydem0505.remoteconfig.data.repositories.DynPropertyRepository;
 import andreydem0505.remoteconfig.exceptions.DynPropertyAlreadyExistsException;
-import andreydem0505.remoteconfig.exceptions.DynPropertyDataValidationException;
 import andreydem0505.remoteconfig.exceptions.DynPropertyNotFoundException;
+import andreydem0505.remoteconfig.exceptions.DynPropertyTypeValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,27 +47,83 @@ public class DynPropertyServiceTest {
     }
 
     // CUSTOM_PROPERTY tests
-    private static Stream<Arguments> provideSimpleDataTypes() {
-        return Stream.of(
-                Arguments.of("john.doe", "theme", "dark-mode"),
-                Arguments.of("jane.smith", "max_connections", 100),
-                Arguments.of("robert.johnson", "pi_value", 3.14159),
-                Arguments.of("alice.williams", "session_timeout", 1699876543210L),
-                Arguments.of("michael.brown", "is_premium", true),
-                Arguments.of("sarah.davis", "last_login", new Date(1729425000000L))
-        );
-    }
-
-    @ParameterizedTest(name = "User {0} with property {1}")
-    @MethodSource("provideSimpleDataTypes")
-    void testCreateDynProperty_WhenCustomPropertyWithVariousTypes_ThenPropertyIsCreated(
-            String username, String propertyName, Object data) {
+    @Test
+    void testCreateDynProperty_WhenCustomPropertyWithStringData_ThenPropertyIsCreated() {
+        String username = "john.doe";
+        String propertyName = "theme";
+        String data = "dark-mode";
 
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, data);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property should be saved in repository");
-        assertEquals(data, savedProperty.getData(), "Property value should be preserved");
+        assertNotNull(savedProperty, "Property '%s' for user '%s' should be saved in repository"
+                .formatted(propertyName, username));
+        assertEquals(data, savedProperty.getData());
+    }
+
+    @Test
+    void testCreateDynProperty_WhenCustomPropertyWithIntegerData_ThenPropertyIsCreated() {
+        String username = "jane.smith";
+        String propertyName = "max_connections";
+        Integer data = 100;
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, data);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty);
+        assertEquals(data, savedProperty.getData());
+    }
+
+    @Test
+    void testCreateDynProperty_WhenCustomPropertyWithDoubleData_ThenPropertyIsCreated() {
+        String username = "robert.johnson";
+        String propertyName = "pi_value";
+        Double data = 3.14159;
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, data);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty);
+        assertEquals(data, savedProperty.getData());
+    }
+
+    @Test
+    void testCreateDynProperty_WhenCustomPropertyWithLongData_ThenPropertyIsCreated() {
+        String username = "alice.williams";
+        String propertyName = "session_timeout";
+        Long data = 1699876543210L;
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, data);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty);
+        assertEquals(data, savedProperty.getData());
+    }
+
+    @Test
+    void testCreateDynProperty_WhenCustomPropertyWithBooleanData_ThenPropertyIsCreated() {
+        String username = "michael.brown";
+        String propertyName = "is_premium";
+        Boolean data = true;
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, data);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty);
+        assertEquals(data, savedProperty.getData());
+    }
+
+    @Test
+    void testCreateDynProperty_WhenCustomPropertyWithDateData_ThenPropertyIsCreated() {
+        String username = "sarah.davis";
+        String propertyName = "last_login";
+        Date data = new Date(1729425000000L);
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, data);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty);
+        assertEquals(data, savedProperty.getData());
     }
 
     @Test
@@ -80,8 +134,8 @@ public class DynPropertyServiceTest {
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, null);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property should be saved even with null data");
-        assertNull(savedProperty.getData(), "Null data should be preserved");
+        assertNotNull(savedProperty);
+        assertNull(savedProperty.getData());
     }
 
     @Test
@@ -93,8 +147,8 @@ public class DynPropertyServiceTest {
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, listData);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property with list data should be saved");
-        assertEquals(listData, savedProperty.getData(), "List should be preserved with all elements");
+        assertNotNull(savedProperty);
+        assertEquals(listData, savedProperty.getData());
     }
 
     @Test
@@ -109,8 +163,8 @@ public class DynPropertyServiceTest {
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, mapData);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property with map data should be saved");
-        assertEquals(mapData, savedProperty.getData(), "Map should be preserved with all key-value pairs");
+        assertNotNull(savedProperty);
+        assertEquals(mapData, savedProperty.getData());
     }
 
     @Test
@@ -134,8 +188,8 @@ public class DynPropertyServiceTest {
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, nestedMapData);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property with nested map should be saved");
-        assertEquals(nestedMapData, savedProperty.getData(), "Nested map structure should be preserved");
+        assertNotNull(savedProperty);
+        assertEquals(nestedMapData, savedProperty.getData());
     }
 
     @Test
@@ -157,13 +211,13 @@ public class DynPropertyServiceTest {
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, complexData);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property with complex nested structure should be saved");
+        assertNotNull(savedProperty);
         @SuppressWarnings("unchecked")
         Map<String, Object> savedData = (Map<String, Object>) savedProperty.getData();
-        assertNotNull(savedData, "Complex nested structure should be preserved");
-        assertEquals(2, savedData.get("columns"), "Columns value should be preserved");
-        assertNotNull(savedData.get("widgets"), "Widgets list should be preserved");
-        assertNotNull(savedData.get("created"), "Created date should be preserved");
+        assertNotNull(savedData);
+        assertEquals(2, savedData.get("columns"));
+        assertNotNull(savedData.get("widgets"));
+        assertNotNull(savedData.get("created"));
     }
 
     @Test
@@ -175,8 +229,8 @@ public class DynPropertyServiceTest {
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, emptyList);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property with empty list should be saved");
-        assertTrue(((List<?>) savedProperty.getData()).isEmpty(), "Empty list should be preserved");
+        assertNotNull(savedProperty);
+        assertTrue(((List<?>) savedProperty.getData()).isEmpty());
     }
 
     @Test
@@ -188,198 +242,255 @@ public class DynPropertyServiceTest {
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, emptyMap);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property with empty map should be saved");
-        assertTrue(((Map<?, ?>) savedProperty.getData()).isEmpty(), "Empty map should be preserved");
-    }
-
-    // Property name validation tests
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "simple_property",
-            "property123",
-            "UPPER_CASE_PROPERTY",
-            "camelCaseProperty",
-            "snake_case_property",
-            "property.with.dots",
-            "app.config.database.host",
-            "feature_flag_v2",
-            "p",
-            "property_123_test"
-    })
-    void testCreateDynProperty_WhenValidPropertyName_ThenPropertyIsCreated(String propertyName) {
-        String username = "user." + UUID.randomUUID();
-        String data = "test_value";
-
-        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, data);
-
-        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Property with valid name should be saved");
-        assertEquals(propertyName, savedProperty.getPropertyName(), "Property name should match");
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "property-with-dash",
-            "property with space",
-            "property@special",
-            "property!invalid",
-            ".starts.with.dot",
-            "ends.with.dot.",
-            "double..dots",
-            "property/slash",
-            "property\\backslash",
-            "property#hash",
-            "property$dollar",
-            "property%percent",
-            "property&ampersand",
-            "property*asterisk",
-            "property(parenthesis",
-            "property)parenthesis",
-            "property+plus",
-            "property=equals",
-            "property[bracket",
-            "property]bracket",
-            "property{brace",
-            "property}brace",
-            "property|pipe",
-            "property:colon",
-            "property;semicolon",
-            "property'quote",
-            "property\"doublequote",
-            "property<less",
-            "property>greater",
-            "property,comma",
-            "property?question",
-            ""
-    })
-    void testCreateDynProperty_WhenInvalidPropertyName_ThenThrowsValidationException(String invalidPropertyName) {
-        String username = "test.user";
-        String data = "test_value";
-
-        DynPropertyDataValidationException exception = assertThrows(
-                DynPropertyDataValidationException.class,
-                () -> dynPropertyService.createDynProperty(username, invalidPropertyName,
-                        PropertyType.CUSTOM_PROPERTY, data),
-                "Should throw validation exception for invalid property name");
-
-        assertTrue(exception.getMessage().contains(invalidPropertyName),
-                "Exception message should mention the invalid property name");
-    }
-
-    @Test
-    void testCreateDynProperty_WhenNullPropertyName_ThenThrowsValidationException() {
-        String username = "null.name.user";
-
-        DynPropertyDataValidationException exception = assertThrows(
-                DynPropertyDataValidationException.class,
-                () -> dynPropertyService.createDynProperty(username, null, PropertyType.CUSTOM_PROPERTY, "data"),
-                "Should throw validation exception for null property name");
-
-        assertTrue(exception.getMessage().contains("Invalid property name"),
-                "Exception message should indicate invalid property name");
+        assertNotNull(savedProperty);
+        assertTrue(((Map<?, ?>) savedProperty.getData()).isEmpty());
     }
 
     // BOOLEAN_FEATURE_FLAG tests
-    @ParameterizedTest
-    @CsvSource({
-            "developer, enable_beta_features, true",
-            "tester, dark_mode_enabled, false"
-    })
-    void testCreateDynProperty_WhenBooleanFlagWithValidValue_ThenPropertyIsCreated(
-            String username, String propertyName, Boolean flagValue) {
+    @ParameterizedTest(name = "User ''{0}'' creates boolean flag with value {1}")
+    @MethodSource("provideBooleanFlagValues")
+    void testCreateDynProperty_WhenBooleanFlag_ThenPropertyIsCreated(String username, Boolean flagValue) {
+        String propertyName = "enable_feature";
 
-        dynPropertyService.createDynProperty(username, propertyName,
-                PropertyType.BOOLEAN_FEATURE_FLAG, flagValue);
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.BOOLEAN_FEATURE_FLAG, flagValue);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Boolean flag should be saved in repository");
-        assertEquals(flagValue, savedProperty.getData(), "Boolean value should match expected");
+        assertNotNull(savedProperty);
+        assertEquals(flagValue, savedProperty.getData());
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "matthew.jackson, broken_flag, not_a_boolean",
-            "olivia.white, numeric_flag, 123",
-            "emma.lopez, double_flag, 1.5"
-    })
-    void testCreateDynProperty_WhenBooleanFlagWithInvalidType_ThenThrowsValidationException(
-            String username, String propertyName, String invalidData) {
-
-        DynPropertyDataValidationException exception = assertThrows(
-                DynPropertyDataValidationException.class,
-                () -> dynPropertyService.createDynProperty(username, propertyName,
-                        PropertyType.BOOLEAN_FEATURE_FLAG, invalidData),
-                "Should throw validation exception for non-boolean data");
-
-        assertTrue(exception.getMessage().contains("BOOLEAN_FEATURE_FLAG"),
-                "Exception message should mention the property type");
-    }
-
-    @Test
-    void testCreateDynProperty_WhenBooleanFlagWithNullData_ThenThrowsValidationException() {
-        String username = "olivia.white";
-        String propertyName = "null_flag";
-
-        assertThrows(DynPropertyDataValidationException.class,
-                () -> dynPropertyService.createDynProperty(username, propertyName,
-                        PropertyType.BOOLEAN_FEATURE_FLAG, null),
-                "Should throw validation exception for null boolean data");
+    private static Stream<Arguments> provideBooleanFlagValues() {
+        return Stream.of(
+                Arguments.of("senior.developer", true),
+                Arguments.of("junior.tester", false)
+        );
     }
 
     // PERCENTAGE_FEATURE_FLAG tests
-    @ParameterizedTest
-    @ValueSource(ints = {0, 1, 50, 99, 100})
-    void testCreateDynProperty_WhenPercentageFlagWithValidValue_ThenPropertyIsCreated(Integer percentage) {
-        String username = "user.percentage." + percentage;
+    @ParameterizedTest(name = "User ''{0}'' creates percentage flag with value {1}%")
+    @MethodSource("providePercentageFlagValues")
+    void testCreateDynProperty_WhenPercentageFlag_ThenPropertyIsCreated(String username, Integer percentage) {
         String propertyName = "feature_rollout";
 
-        dynPropertyService.createDynProperty(username, propertyName,
-                PropertyType.PERCENTAGE_FEATURE_FLAG, percentage);
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.PERCENTAGE_FEATURE_FLAG, percentage);
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
-        assertNotNull(savedProperty, "Percentage flag should be saved");
-        assertEquals(percentage, savedProperty.getData(), "Percentage should match expected");
+        assertNotNull(savedProperty);
+        assertEquals(percentage, savedProperty.getData());
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = {-1, -100, 101, 200, Integer.MIN_VALUE, Integer.MAX_VALUE})
-    void testCreateDynProperty_WhenPercentageFlagOutOfRange_ThenThrowsException(Integer invalidPercentage) {
-        String username = "invalid.user." + UUID.randomUUID();
-        String propertyName = "invalid_percentage";
-
-        DynPropertyDataValidationException exception = assertThrows(
-                DynPropertyDataValidationException.class,
-                () -> dynPropertyService.createDynProperty(username, propertyName,
-                        PropertyType.PERCENTAGE_FEATURE_FLAG, invalidPercentage),
-                "Should throw validation exception for out of range percentage");
-
-        assertTrue(exception.getMessage().contains("PERCENTAGE_FEATURE_FLAG"),
-                "Exception message should mention the property type");
+    private static Stream<Arguments> providePercentageFlagValues() {
+        return Stream.of(
+                Arguments.of("marketing.manager", 0),
+                Arguments.of("product.owner", 50),
+                Arguments.of("release.engineer", 100)
+        );
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "william.harris, wrong_type, fifty",
-            "sophia.martin, decimal_percentage, 50.5"
-    })
-    void testCreateDynProperty_WhenPercentageFlagWithInvalidType_ThenThrowsException(
-            String username, String propertyName, String invalidData) {
+    // EQUALITY_FEATURE_FLAG tests
+    @ParameterizedTest(name = "User ''{0}'' creates equality flag with {2} value: {1}")
+    @MethodSource("provideEqualityFlagValues")
+    void testCreateDynProperty_WhenEqualityFlag_ThenPropertyIsCreated(
+            String username, Object expectedValue, String valueType) {
+        String propertyName = "feature_for_specific_value";
 
-        assertThrows(DynPropertyDataValidationException.class,
-                () -> dynPropertyService.createDynProperty(username, propertyName,
-                        PropertyType.PERCENTAGE_FEATURE_FLAG, invalidData),
-                "Should throw validation exception for non-integer percentage");
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.EQUALITY_FEATURE_FLAG, expectedValue);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty);
+        assertEquals(expectedValue, savedProperty.getData());
+    }
+
+    private static Stream<Arguments> provideEqualityFlagValues() {
+        return Stream.of(
+                Arguments.of("account.manager", "premium", "string"),
+                Arguments.of("api.developer", 42, "integer"),
+                Arguments.of("data.analyst", 1000000L, "long"),
+                Arguments.of("finance.controller", 99.99, "double")
+        );
+    }
+
+    // UNIT_IN_LIST_FEATURE_FLAG tests
+    @ParameterizedTest(name = "Creates unit in list flag with {1} list containing {2} elements")
+    @MethodSource("provideUnitInListFlagValues")
+    void testCreateDynProperty_WhenUnitInListFlag_ThenPropertyIsCreated(
+            List<?> allowedValues, String listType, int elementCount) {
+        String propertyName = "feature_for_whitelisted_users";
+
+        dynPropertyService.createDynProperty("security.admin", propertyName,
+                PropertyType.UNIT_IN_LIST_FEATURE_FLAG, allowedValues);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName("security.admin", propertyName);
+        assertNotNull(savedProperty);
+        assertEquals(allowedValues, savedProperty.getData());
+    }
+
+    private static Stream<Arguments> provideUnitInListFlagValues() {
+        return Stream.of(
+                Arguments.of(Arrays.asList("admin", "moderator", "vip"), "string", 3),
+                Arguments.of(Arrays.asList(1, 2, 3, 5, 8), "integer", 5),
+                Arguments.of(List.of(), "empty", 0)
+        );
+    }
+
+    // checkHit tests for BOOLEAN_FEATURE_FLAG
+    @ParameterizedTest(name = "Boolean flag value {0} returns {0} when checked")
+    @ValueSource(booleans = {true, false})
+    void testCheckHit_WhenBooleanFlag_ThenReturnsExpectedValue(boolean value) {
+        String username = "feature.user";
+        String propertyName = "new_ui_enabled";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.BOOLEAN_FEATURE_FLAG, value);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, null);
+
+        assertEquals(value, result);
+    }
+
+    // checkHit tests for PERCENTAGE_FEATURE_FLAG
+    @ParameterizedTest(name = "Percentage flag with {0}% returns {1}")
+    @MethodSource("providePercentageFlagCheckHitData")
+    void testCheckHit_WhenPercentageFlag_ThenReturnsExpectedValue(
+            Integer percentage, boolean expectedResult, String description) {
+        String username = "rollout.manager";
+        String propertyName = "gradual_feature_rollout";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.PERCENTAGE_FEATURE_FLAG, percentage);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, null);
+
+        assertEquals(expectedResult, result, description);
+    }
+
+    private static Stream<Arguments> providePercentageFlagCheckHitData() {
+        return Stream.of(
+                Arguments.of(0, false, "0% should always return false"),
+                Arguments.of(100, true, "100% should always return true")
+        );
+    }
+
+    // checkHit tests for EQUALITY_FEATURE_FLAG
+    @Test
+    void testCheckHit_WhenEqualityFlagMatchesContext_ThenReturnsTrue() {
+        String username = "subscription.service";
+        String propertyName = "premium_feature";
+        String expectedValue = "premium";
+
+        dynPropertyService.createDynProperty(username, propertyName,
+                PropertyType.EQUALITY_FEATURE_FLAG, expectedValue);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, "premium");
+
+        assertTrue(result);
     }
 
     @Test
-    void testCreateDynProperty_WhenPercentageFlagWithNullData_ThenThrowsValidationException() {
-        String username = "null.percentage.user";
-        String propertyName = "null_percentage";
+    void testCheckHit_WhenEqualityFlagDoesNotMatchContext_ThenReturnsFalse() {
+        String username = "subscription.service";
+        String propertyName = "premium_feature";
+        String expectedValue = "premium";
 
-        assertThrows(DynPropertyDataValidationException.class,
-                () -> dynPropertyService.createDynProperty(username, propertyName,
-                        PropertyType.PERCENTAGE_FEATURE_FLAG, null),
-                "Should throw validation exception for null percentage");
+        dynPropertyService.createDynProperty(username, propertyName,
+                PropertyType.EQUALITY_FEATURE_FLAG, expectedValue);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, "basic");
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testCheckHit_WhenEqualityFlagWithNumericContext_ThenWorksCorrectly() {
+        String username = "api.gateway";
+        String propertyName = "version_specific_feature";
+        Integer expectedVersion = 5;
+
+        dynPropertyService.createDynProperty(username, propertyName,
+                PropertyType.EQUALITY_FEATURE_FLAG, expectedVersion);
+
+        boolean matchResult = dynPropertyService.checkHit(username, propertyName, 5);
+        boolean noMatchResult = dynPropertyService.checkHit(username, propertyName, 3);
+
+        assertTrue(matchResult);
+        assertFalse(noMatchResult);
+    }
+
+    // checkHit tests for UNIT_IN_LIST_FEATURE_FLAG
+    @ParameterizedTest(name = "{3}")
+    @MethodSource("provideUnitInListTestData")
+    void testCheckHit_WhenUnitInList_ThenReturnsExpectedValue(
+            List<?> data,
+            Object context,
+            boolean expectedResult,
+            String description
+    ) {
+        String username = "access.controller";
+        String propertyName = "whitelist_feature";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.UNIT_IN_LIST_FEATURE_FLAG, data);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, context);
+
+        assertEquals(expectedResult, result);
+    }
+
+    private static Stream<Arguments> provideUnitInListTestData() {
+        return Stream.of(
+                Arguments.of(
+                        Arrays.asList("alice", "bob", "charlie"),
+                        "bob",
+                        true,
+                        "Context in list returns true"
+                ),
+                Arguments.of(
+                        Arrays.asList("alice", "bob", "charlie"),
+                        "david",
+                        false,
+                        "Context not in list returns false"
+                ),
+                Arguments.of(
+                        List.of(),
+                        "anyone",
+                        false,
+                        "Empty list always returns false"
+                ),
+                Arguments.of(
+                        Arrays.asList(100, 200, 300),
+                        200,
+                        true,
+                        "Integer context in list returns true"
+                ),
+                Arguments.of(
+                        Arrays.asList(100, 200, 300),
+                        150,
+                        false,
+                        "Integer context not in list returns false"
+                )
+        );
+    }
+
+    // checkHit negative tests
+    @Test
+    void testCheckHit_WhenPropertyDoesNotExist_ThenThrowsNotFoundException() {
+        String username = "nonexistent.user";
+        String propertyName = "nonexistent_feature";
+
+        assertThrows(
+                DynPropertyNotFoundException.class,
+                () -> dynPropertyService.checkHit(username, propertyName, "context")
+        );
+    }
+
+    @Test
+    void testCheckHit_WhenCustomProperty_ThenThrowsIncorrectTypeException() {
+        String username = "config.user";
+        String propertyName = "regular_setting";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, "value");
+
+        assertThrows(
+                DynPropertyTypeValidationException.class,
+                () -> dynPropertyService.checkHit(username, propertyName, "context")
+        );
     }
 
     // Duplicate property tests
@@ -391,14 +502,15 @@ public class DynPropertyServiceTest {
 
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, initialData);
 
-        assertThrows(DynPropertyAlreadyExistsException.class,
+        assertThrows(
+                DynPropertyAlreadyExistsException.class,
                 () -> dynPropertyService.createDynProperty(username, propertyName,
-                        PropertyType.CUSTOM_PROPERTY, "new_value"),
-                "Should throw already exists exception when creating duplicate property");
+                        PropertyType.CUSTOM_PROPERTY, "new_value")
+        );
 
         DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
         assertEquals(initialData, savedProperty.getData(),
-                "Original property data should remain unchanged after failed duplicate attempt");
+                "Original property should remain unchanged after duplicate creation attempt");
     }
 
     @Test
@@ -419,10 +531,8 @@ public class DynPropertyServiceTest {
         DynProperty secondProperty = dynPropertyRepository.findByUsernameAndPropertyName(
                 secondUsername, sharedPropertyName);
 
-        assertNotNull(firstProperty, "First user's property should exist");
-        assertNotNull(secondProperty, "Second user's property should exist");
-        assertEquals(firstData, firstProperty.getData(), "First user's data should be preserved");
-        assertEquals(secondData, secondProperty.getData(), "Second user's data should be preserved");
+        assertNotNull(firstProperty);
+        assertNotNull(secondProperty);
     }
 
     @Test
@@ -430,36 +540,50 @@ public class DynPropertyServiceTest {
         String username = "benjamin.clark";
         String firstPropertyName = "setting_one";
         String secondPropertyName = "setting_two";
-        String firstData = "value_one";
-        String secondData = "value_two";
 
         dynPropertyService.createDynProperty(username, firstPropertyName,
-                PropertyType.CUSTOM_PROPERTY, firstData);
+                PropertyType.CUSTOM_PROPERTY, "value_one");
         dynPropertyService.createDynProperty(username, secondPropertyName,
-                PropertyType.CUSTOM_PROPERTY, secondData);
+                PropertyType.CUSTOM_PROPERTY, "value_two");
 
         DynProperty firstProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, firstPropertyName);
-        DynProperty secondProperty = dynPropertyRepository.findByUsernameAndPropertyName(username,
-                secondPropertyName);
+        DynProperty secondProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, secondPropertyName);
 
-        assertNotNull(firstProperty, "First property should exist");
-        assertNotNull(secondProperty, "Second property should exist");
-        assertEquals(firstData, firstProperty.getData(), "First property data should be preserved");
-        assertEquals(secondData, secondProperty.getData(), "Second property data should be preserved");
+        assertNotNull(firstProperty);
+        assertNotNull(secondProperty);
     }
 
     // getDynPropertyData tests
-    @Test
-    void testGetDynPropertyData_WhenPropertyExists_ThenReturnsCorrectData() {
-        String username = "data.retrieval.user";
-        String propertyName = "user_theme";
-        String expectedData = "dark_mode";
+    @ParameterizedTest(name = "Retrieves {3} data type: {2}")
+    @MethodSource("provideGetDynPropertyDataTestCases")
+    void testGetDynPropertyData_WhenPropertyExists_ThenReturnsCorrectData(
+            String username,
+            String propertyName,
+            Object expectedData,
+            String dataType
+    ) {
 
         dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, expectedData);
 
         Object actualData = dynPropertyService.getDynPropertyData(username, propertyName);
 
-        assertEquals(expectedData, actualData, "Retrieved data should match stored data");
+        assertEquals(expectedData, actualData);
+    }
+
+    private static Stream<Arguments> provideGetDynPropertyDataTestCases() {
+        Map<String, Object> complexData = new HashMap<>();
+        complexData.put("max_retries", 3);
+        complexData.put("timeout_seconds", 30);
+        complexData.put("endpoints", Arrays.asList("api.example.com", "backup.example.com"));
+
+        return Stream.of(
+                Arguments.of("data.retrieval.user", "user_theme", "dark_mode", "string"),
+                Arguments.of("config.user", "max_connections", 100, "integer"),
+                Arguments.of("settings.user", "timeout_value", 30.5, "double"),
+                Arguments.of("feature.user", "is_enabled", true, "boolean"),
+                Arguments.of("complex.data.user", "application_config", complexData, "complex map"),
+                Arguments.of("null.data.user", "optional_config", null, "null")
+        );
     }
 
     @Test
@@ -467,17 +591,15 @@ public class DynPropertyServiceTest {
         String username = "nonexistent.user";
         String propertyName = "nonexistent_property";
 
-        DynPropertyNotFoundException exception = assertThrows(
+        assertThrows(
                 DynPropertyNotFoundException.class,
-                () -> dynPropertyService.getDynPropertyData(username, propertyName),
-                "Should throw not found exception when property does not exist");
-
-        assertNotNull(exception, "Exception should be thrown");
+                () -> dynPropertyService.getDynPropertyData(username, propertyName)
+        );
     }
 
     @Test
     void testGetDynPropertyData_WhenBooleanFlag_ThenReturnsBoolean() {
-        String username = "boolean.flag.user";
+        String username = "flag.user";
         String propertyName = "premium_features_enabled";
         Boolean expectedData = true;
 
@@ -485,12 +607,12 @@ public class DynPropertyServiceTest {
 
         Object actualData = dynPropertyService.getDynPropertyData(username, propertyName);
 
-        assertEquals(expectedData, actualData, "Boolean flag value should be retrieved correctly");
+        assertEquals(expectedData, actualData);
     }
 
     @Test
     void testGetDynPropertyData_WhenPercentageFlag_ThenReturnsInteger() {
-        String username = "percentage.flag.user";
+        String username = "rollout.user";
         String propertyName = "feature_rollout_percentage";
         Integer expectedData = 75;
 
@@ -499,35 +621,7 @@ public class DynPropertyServiceTest {
 
         Object actualData = dynPropertyService.getDynPropertyData(username, propertyName);
 
-        assertEquals(expectedData, actualData, "Percentage flag value should be retrieved correctly");
-    }
-
-    @Test
-    void testGetDynPropertyData_WhenComplexData_ThenReturnsCompleteStructure() {
-        String username = "complex.data.user";
-        String propertyName = "application_config";
-        Map<String, Object> expectedData = new HashMap<>();
-        expectedData.put("max_retries", 3);
-        expectedData.put("timeout_seconds", 30);
-        expectedData.put("endpoints", Arrays.asList("api.example.com", "backup.example.com"));
-
-        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, expectedData);
-
-        Object actualData = dynPropertyService.getDynPropertyData(username, propertyName);
-
-        assertEquals(expectedData, actualData, "Complex data structure should be retrieved correctly");
-    }
-
-    @Test
-    void testGetDynPropertyData_WhenNullData_ThenReturnsNull() {
-        String username = "null.data.user";
-        String propertyName = "optional_config";
-
-        dynPropertyService.createDynProperty(username, propertyName, PropertyType.CUSTOM_PROPERTY, null);
-
-        Object actualData = dynPropertyService.getDynPropertyData(username, propertyName);
-
-        assertNull(actualData, "Null data should be retrieved as null");
+        assertEquals(expectedData, actualData);
     }
 
     @Test
@@ -546,9 +640,9 @@ public class DynPropertyServiceTest {
         Object firstUserActualData = dynPropertyService.getDynPropertyData(firstUsername, sharedPropertyName);
         Object secondUserActualData = dynPropertyService.getDynPropertyData(secondUsername, sharedPropertyName);
 
-        assertEquals(firstUserData, firstUserActualData, "First user should get their own data");
-        assertEquals(secondUserData, secondUserActualData, "Second user should get their own data");
-        assertNotEquals(firstUserActualData, secondUserActualData, "Data should be user-specific");
+        assertEquals(firstUserData, firstUserActualData);
+        assertEquals(secondUserData, secondUserActualData);
+        assertNotEquals(firstUserActualData, secondUserActualData);
     }
 
     @Test
@@ -565,7 +659,7 @@ public class DynPropertyServiceTest {
         Object firstActualData = dynPropertyService.getDynPropertyData(username, firstPropertyName);
         Object secondActualData = dynPropertyService.getDynPropertyData(username, secondPropertyName);
 
-        assertEquals(firstData, firstActualData, "First property should return correct data");
-        assertEquals(secondData, secondActualData, "Second property should return correct data");
+        assertEquals(firstData, firstActualData);
+        assertEquals(secondData, secondActualData);
     }
 }

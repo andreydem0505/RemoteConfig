@@ -30,4 +30,13 @@ public class DynPropertiesController {
         Object result = dynPropertyService.getDynPropertyData(authentication.getName(), propertyName);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/check/{featureFlag}")
+    public boolean checkFeatureFlagHit(
+            @PathVariable String featureFlag,
+            @RequestBody(required = false) Object context,
+            Authentication authentication
+    ) {
+        return dynPropertyService.checkHit(authentication.getName(), featureFlag, context);
+    }
 }

@@ -20,8 +20,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect username or password");
     }
 
-    @ExceptionHandler(NoUserWithUsernameException.class)
-    public ResponseEntity<String> handleException(NoUserWithUsernameException e) {
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleException(UserNotFoundException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 

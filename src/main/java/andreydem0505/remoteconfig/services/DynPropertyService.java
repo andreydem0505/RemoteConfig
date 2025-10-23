@@ -3,9 +3,8 @@ package andreydem0505.remoteconfig.services;
 import andreydem0505.remoteconfig.data.documents.DynProperty;
 import andreydem0505.remoteconfig.data.documents.PropertyType;
 import andreydem0505.remoteconfig.data.repositories.DynPropertyRepository;
-import andreydem0505.remoteconfig.exceptions.DynPropertyAlreadyExistsException;
-import andreydem0505.remoteconfig.exceptions.DynPropertyDataValidationException;
-import andreydem0505.remoteconfig.exceptions.DynPropertyNotFoundException;
+import andreydem0505.remoteconfig.exceptions.*;
+import andreydem0505.remoteconfig.services.feature_flags.FeatureFlagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,17 +12,18 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DynPropertyService {
     private final DynPropertyRepository dynPropertyRepository;
+    private final DynPropertyValidationService validationService;
+    private final FeatureFlagService featureFlagService;
 
     public void createDynProperty(String username, String propertyName, PropertyType type, Object data) {
-        if (!validateName(propertyName)) {
-            throw new DynPropertyDataValidationException("Invalid property name: " + propertyName);
-        }
+        validationService
+                .validateName(propertyName)
+                .validateData(type, data);
+
         if (dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName) != null) {
             throw new DynPropertyAlreadyExistsException();
         }
-        if (!validateData(type, data)) {
-            throw new DynPropertyDataValidationException("Invalid data for property type: " + type);
-        }
+
         DynProperty dynProperty = new DynProperty(username, propertyName, type, data);
         dynPropertyRepository.save(dynProperty);
     }
@@ -33,21 +33,22 @@ public class DynPropertyService {
         if (dynProperty == null) {
             throw new DynPropertyNotFoundException();
         }
+
         return dynProperty.getData();
     }
 
-    private boolean validateName(String propertyName) {
-        if (propertyName == null || propertyName.isEmpty()) {
-            return false;
+    public boolean checkHit(String username, String propertyName, Object context) {
+        DynProperty dynProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        if (dynProperty == null) {
+            throw new DynPropertyNotFoundException();
         }
-        return propertyName.matches("^[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)*$");
-    }
 
-    private boolean validateData(PropertyType type, Object data) {
-        return switch (type) {
-            case CUSTOM_PROPERTY -> true;
-            case BOOLEAN_FEATURE_FLAG -> data instanceof Boolean;
-            case PERCENTAGE_FEATURE_FLAG -> data instanceof Integer i && i >= 0 && i <= 100;
-        };
+        PropertyType type = dynProperty.getType();
+
+        validationService
+                .validateIsFeatureFlag(type)
+                .validateContext(propertyName, type, context, dynProperty.getData());
+
+        return featureFlagService.checkHit(type, context, dynProperty.getData());
     }
 }

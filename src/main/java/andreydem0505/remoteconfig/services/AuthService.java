@@ -2,7 +2,7 @@ package andreydem0505.remoteconfig.services;
 
 import andreydem0505.remoteconfig.data.documents.User;
 import andreydem0505.remoteconfig.data.repositories.UserRepository;
-import andreydem0505.remoteconfig.exceptions.NoUserWithUsernameException;
+import andreydem0505.remoteconfig.exceptions.UserNotFoundException;
 import andreydem0505.remoteconfig.exceptions.UserAlreadyExistsException;
 import andreydem0505.remoteconfig.security.JwtService;
 import andreydem0505.remoteconfig.security.UserRole;
@@ -29,10 +29,10 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public String login(String username, String password) throws NoUserWithUsernameException, BadCredentialsException {
+    public String login(String username, String password) throws UserNotFoundException, BadCredentialsException {
         User user = userRepository.findByUsername(username);
         if (user == null) {
-            throw new NoUserWithUsernameException();
+            throw new UserNotFoundException();
         }
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         return jwtService.generateToken(user);
