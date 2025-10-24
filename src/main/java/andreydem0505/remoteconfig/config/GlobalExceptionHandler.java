@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(DynPropertyAlreadyExistsException.class)
-    public ResponseEntity<String> handleException(DynPropertyAlreadyExistsException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-    }
-
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<String> handleException(BadCredentialsException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect username or password");
+    }
+
+    @ExceptionHandler(DynPropertyAlreadyExistsException.class)
+    public ResponseEntity<String> handleException(DynPropertyAlreadyExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     @ExceptionHandler(UserNotFoundException.class)
@@ -42,6 +42,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DynPropertyNotFoundException.class)
     public ResponseEntity<String> handleException(DynPropertyNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No dynamic property with this name was found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(DynPropertyContextValidationException.class)
+    public ResponseEntity<String> handleException(DynPropertyContextValidationException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(DynPropertyTypeValidationException.class)
+    public ResponseEntity<String> handleException(DynPropertyTypeValidationException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 }
