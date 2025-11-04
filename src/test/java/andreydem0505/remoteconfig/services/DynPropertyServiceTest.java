@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class DynPropertyServiceTest {
+public class DynPropertyServiceTest extends MongoTestBase {
 
     @Autowired
     private DynPropertyService dynPropertyService;

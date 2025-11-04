@@ -1,26 +1,147 @@
+x-backend-healthcheck: &backend-healthcheck
+  test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+
+x-mongodb-healthcheck: &mongodb-healthcheck
+  test: [ "CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ping:1})' || exit 1" ]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+x-mongo-image: &mongo-image
+  image: mongo:8.0
+
+x-backend-build: &backend-build
+  build:
+    context: .
+
 services:
   backend:
+    <<: [ *backend-build, *restart-policy ]
     container_name: remote_config_backend
-    build:
-        context: .
     ports:
-        - "8080:8080"
+      - "8080:8080"
     env_file:
       - .env
+    profiles: [ "production" ]
+    healthcheck: *backend-healthcheck
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+
+  backend-test:
+    <<: [ *backend-build, *restart-policy ]
+    container_name: remote_config_backend_test
+    env_file:
+      - .env.load_testing
+    profiles: [ "load-test" ]
+    healthcheck: *backend-healthcheck
+    mem_limit: 2g
+    cpus: 6.0
+    depends_on:
+      mongodb-test:
+        condition: service_healthy
+    networks:
+      - k6-net
 
   mongodb:
-    image: mongo:8.0
+    <<: [ *mongo-image, *restart-policy ]
     container_name: remote_config_mongodb
     expose:
-      - "27017"
+      - "27018"
     ports:
-      - "27017:27017"
+      - "27018:27017"
     env_file:
-      - .env
+      - .env.mongo
+    profiles: [ "production" ]
+    healthcheck: *mongodb-healthcheck
     volumes:
-      - mongodb_data:/data/db
+      - mongodb-data:/data/db
+
+  mongodb-test:
+    <<: [ *mongo-image, *restart-policy ]
+    container_name: remote_config_mongodb_test
+    expose:
+      - "27018"
+    ports:
+      - "27018:27017"
+    env_file:
+      - .env.mongo
+    profiles: [ "load-test" ]
+    healthcheck: *mongodb-healthcheck
+    mem_limit: 1g
+    cpus: 1.0
+    volumes:
+      - mongodb-test_data:/data/db
+    networks:
+      - k6-net
+
+  prometheus:
+    image: prom/prometheus:v3.7.2
+    <<: *restart-policy
+    container_name: remote_config_prometheus
+    profiles: [ "load-test" ]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-remote-write-receiver'
+    networks:
+      - k6-net
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    <<: *restart-policy
+    container_name: remote_config_grafana
+    profiles: [ "load-test" ]
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env.grafana
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - k6-net
+    depends_on:
+      - prometheus
+
+  k6:
+    build:
+      context: ./k6
+    container_name: remote_config_k6
+    profiles: [ "load-test" ]
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - K6_PROMETHEUS_RW_TREND_STATS=p(95),p(99),min,max
+      - BASE_URL=http://backend-test:8080
+      - K6_WEB_DASHBOARD=true # remove for grafana dashboard
+    ports:
+      - "5665:5665"
+    networks:
+      - k6-net
+    depends_on:
+      backend-test:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
 
 volumes:
-    mongodb_data:
+  mongodb-data:
+  mongodb-test_data:
+  grafana-storage:
+
+networks:
+  k6-net:
+    driver: bridge

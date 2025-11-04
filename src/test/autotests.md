@@ -1,7 +1,7 @@
 - Tests must be correct and logical, conforming to the actual class API.
 - DynPropertyValidationServiceTest must check dynamic property validation logic only.
 - DynPropertyServiceTest must check dynamic property work on a high level only (without checking validation).
-- Test environment must be described in `application-test.properties`. Tests must work in isolation with production environment.
+- Test environment must be described in `application-test.test_data`. Tests must work in isolation with production environment.
 - Tests must cover all scenarios: positive, negative, and edge cases.
 - Non-existent methods must not be used.
 - Before and after each test, repositories must be cleared to ensure test independence.

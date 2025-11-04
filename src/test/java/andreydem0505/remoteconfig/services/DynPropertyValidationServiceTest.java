@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class DynPropertyValidationServiceTest {
+public class DynPropertyValidationServiceTest extends MongoTestBase {
 
     @Autowired
     private DynPropertyValidationService validationService;

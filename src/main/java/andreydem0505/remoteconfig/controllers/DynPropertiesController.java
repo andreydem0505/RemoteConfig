@@ -1,6 +1,7 @@
 package andreydem0505.remoteconfig.controllers;
 
 import andreydem0505.remoteconfig.dto.DynPropertyDto;
+import andreydem0505.remoteconfig.dto.FeatureFlagHitRequestDto;
 import andreydem0505.remoteconfig.services.DynPropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,12 +32,16 @@ public class DynPropertiesController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/check/{featureFlag}")
+    @PostMapping("/check/{featureFlag}")
     public boolean checkFeatureFlagHit(
             @PathVariable String featureFlag,
-            @RequestBody(required = false) Object context,
+            @RequestBody(required = false) FeatureFlagHitRequestDto dto,
             Authentication authentication
     ) {
-        return dynPropertyService.checkHit(authentication.getName(), featureFlag, context);
+        return dynPropertyService.checkHit(
+                authentication.getName(),
+                featureFlag,
+                dto == null ? null : dto.getContext()
+        );
     }
 }
