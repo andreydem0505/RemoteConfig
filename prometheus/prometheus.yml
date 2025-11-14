@@ -10,3 +10,7 @@ scrape_configs:
       - targets: ['k6:6565']  # k6's metrics endpoint (using Docker service name)
     scrape_interval: 5s     # More frequent scraping for k6 during tests
     metrics_path: /metrics  # Path where metrics are exposed
+  - job_name: 'spring-boot-application'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['backend-test:8080']

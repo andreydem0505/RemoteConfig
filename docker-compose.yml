@@ -37,6 +37,8 @@ services:
   backend-test:
     <<: [ *backend-build, *restart-policy ]
     container_name: remote_config_backend_test
+    ports:
+      - "8080:8080"
     env_file:
       - .env.load_testing
     profiles: [ "load-test" ]
@@ -126,7 +128,11 @@ services:
       - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
       - K6_PROMETHEUS_RW_TREND_STATS=p(95),p(99),min,max
       - BASE_URL=http://backend-test:8080
-      - K6_WEB_DASHBOARD=true # remove for grafana dashboard
+      # remove for grafana dashboard
+      - K6_WEB_DASHBOARD=true
+      - K6_WEB_DASHBOARD_EXPORT=/reports/report.html
+    volumes:
+      - ./k6/reports:/reports
     ports:
       - "5665:5665"
     networks:
