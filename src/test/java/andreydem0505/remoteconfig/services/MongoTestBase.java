@@ -5,19 +5,16 @@ import org.junit.jupiter.api.BeforeAll;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
 public abstract class MongoTestBase {
 
-    static final MongoDBContainer mongoDBContainer;
-
-    static {
-        mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0"))
-                .withExposedPorts(27017);
-        mongoDBContainer.start();
-    }
+    @Container
+    static final MongoDBContainer mongoDBContainer =
+            new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
@@ -27,8 +24,7 @@ public abstract class MongoTestBase {
 
     @BeforeAll
     static void beforeAll() {
-        System.out.println("MongoDB container started at: " + mongoDBContainer.getReplicaSetUrl());
-        System.out.println("MongoDB container is running: " + mongoDBContainer.isRunning());
+        System.out.println("MongoDB container starting...");
     }
 
     @AfterAll

@@ -51,6 +51,6 @@ dependencies {
 }
 
 tasks.named('test') {
-    setEnvironment(env.allVariables())
+    environment env.allVariables()
     useJUnitPlatform()
 }
