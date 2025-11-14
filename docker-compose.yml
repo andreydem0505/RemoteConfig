@@ -130,9 +130,9 @@ services:
       - BASE_URL=http://backend-test:8080
       # remove for grafana dashboard
       - K6_WEB_DASHBOARD=true
-      - K6_WEB_DASHBOARD_EXPORT=/reports/report.html
+      - K6_WEB_DASHBOARD_EXPORT=/reports/load_test_report.html
     volumes:
-      - ./k6/reports:/reports
+      - ./docs:/reports
     ports:
       - "5665:5665"
     networks:
