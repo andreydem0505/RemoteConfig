@@ -10,11 +10,20 @@ x-mongodb-healthcheck: &mongodb-healthcheck
   timeout: 5s
   retries: 5
 
+x-redis-healthcheck: &redis-healthcheck
+  test: [ "CMD", "redis-cli", "ping" ]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+
 x-restart-policy: &restart-policy
   restart: unless-stopped
 
 x-mongo-image: &mongo-image
-  image: mongo:8.0
+  image: mongo:8.2.3
+
+x-redis-image: &redis-image
+  image: redis:8.2.3
 
 x-backend-build: &backend-build
   build:
@@ -33,6 +42,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   backend-test:
     <<: [ *backend-build, *restart-policy ]
@@ -47,6 +58,8 @@ services:
     cpus: 6.0
     depends_on:
       mongodb-test:
+        condition: service_healthy
+      redis-test:
         condition: service_healthy
     networks:
       - k6-net
@@ -80,6 +93,34 @@ services:
     cpus: 1.0
     volumes:
       - mongodb-test_data:/data/db
+    networks:
+      - k6-net
+
+  redis:
+    <<: [ *redis-image, *restart-policy ]
+    container_name: remote_config_redis
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"
+    profiles: [ "production" ]
+    healthcheck: *redis-healthcheck
+    volumes:
+      - redis-data:/data
+
+  redis-test:
+    <<: [ *redis-image, *restart-policy ]
+    container_name: remote_config_redis_test
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"
+    profiles: [ "load-test" ]
+    healthcheck: *redis-healthcheck
+    mem_limit: 512m
+    cpus: 0.5
+    volumes:
+      - redis-test_data:/data
     networks:
       - k6-net
 
@@ -146,6 +187,8 @@ services:
 volumes:
   mongodb-data:
   mongodb-test_data:
+  redis-data:
+  redis-test_data:
   grafana-storage:
 
 networks:
