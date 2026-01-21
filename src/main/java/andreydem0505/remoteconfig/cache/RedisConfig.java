@@ -13,37 +13,44 @@ import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
-    public static final String CACHE_NAME = "DYNAMIC_PROPERTIES";
+    public static final String DYN_PROPERTY_CACHE_NAME = "DYNAMIC_PROPERTIES";
+    public static final String DYN_PROPERTY_CACHE_QUALIFIER = "DYN_PROPERTY_CACHE";
+    public static final String USER_CACHE_NAME = "USERS";
+    public static final String USER_CACHE_QUALIFIER = "USER_CACHE";
 
     @Bean
-    public RedisSerializer<String> simpleKeyKryoSerializer() {
-        return new SimpleKeyKryoSerializer();
+    public RedisSerializer<String> keyKryoSerializer() {
+        return new KeyKryoSerializer();
     }
 
     @Bean
-    public RedisSerializer<DynPropertyCache> dynPropertyKryoSerializer() {
-        return new DynPropertyKryoSerializer();
+    public RedisSerializer<Object> valueKryoSerializer() {
+        return new ValueKryoSerializer();
     }
 
-    @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory,
-                                          RedisSerializer<String> simpleKeyKryoSerializer,
-                                          RedisSerializer<DynPropertyCache> dynPropertyKryoSerializer) {
+                                          RedisSerializer<String> keyKryoSerializer,
+                                          RedisSerializer<Object> valueKryoSerializer) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofDays(30))
                 .disableCachingNullValues()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(simpleKeyKryoSerializer))
+                        .fromSerializer(keyKryoSerializer))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(dynPropertyKryoSerializer));
+                        .fromSerializer(valueKryoSerializer));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
                 .build();
     }
 
-    @Bean
-    public Cache cache(RedisCacheManager cacheManager) {
-        return cacheManager.getCache(CACHE_NAME);
+    @Bean(name = DYN_PROPERTY_CACHE_QUALIFIER)
+    public Cache dynPropertyCache(RedisCacheManager cacheManager) {
+        return cacheManager.getCache(DYN_PROPERTY_CACHE_NAME);
+    }
+
+    @Bean(name = USER_CACHE_QUALIFIER)
+    public Cache userCache(RedisCacheManager cacheManager) {
+        return cacheManager.getCache(USER_CACHE_NAME);
     }
 }

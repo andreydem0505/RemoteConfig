@@ -1,6 +1,6 @@
 package andreydem0505.remoteconfig.cache;
 
-import andreydem0505.remoteconfig.data.documents.PropertyType;
+import andreydem0505.remoteconfig.security.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +12,7 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DynPropertyCache implements Serializable {
-    private PropertyType type;
-    private Object data;
+public class UserCache implements Serializable {
+    private String password;
+    private UserRole role;
 }

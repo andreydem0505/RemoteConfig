@@ -9,6 +9,7 @@ build/
 .env.grafana
 .env.mongo
 .idea
+snapshots/
 
 ### STS ###
 .apt_generated

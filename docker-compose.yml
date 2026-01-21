@@ -39,6 +39,8 @@ services:
       - .env
     profiles: [ "production" ]
     healthcheck: *backend-healthcheck
+    volumes:
+      - ./snapshots:/snapshots
     depends_on:
       mongodb:
         condition: service_healthy
@@ -54,8 +56,10 @@ services:
       - .env.load_testing
     profiles: [ "load-test" ]
     healthcheck: *backend-healthcheck
-    mem_limit: 2g
+    mem_limit: 4g
     cpus: 6.0
+    volumes:
+      - ./snapshots:/snapshots
     depends_on:
       mongodb-test:
         condition: service_healthy
@@ -91,8 +95,6 @@ services:
     healthcheck: *mongodb-healthcheck
     mem_limit: 1g
     cpus: 1.0
-    volumes:
-      - mongodb-test_data:/data/db
     networks:
       - k6-net
 
@@ -119,8 +121,6 @@ services:
     healthcheck: *redis-healthcheck
     mem_limit: 512m
     cpus: 0.5
-    volumes:
-      - redis-test_data:/data
     networks:
       - k6-net
 
@@ -186,9 +186,7 @@ services:
 
 volumes:
   mongodb-data:
-  mongodb-test_data:
   redis-data:
-  redis-test_data:
   grafana-storage:
 
 networks:

@@ -8,14 +8,13 @@ import andreydem0505.remoteconfig.data.repositories.DynPropertyRepository;
 import andreydem0505.remoteconfig.exceptions.*;
 import andreydem0505.remoteconfig.mappers.DynPropertyMapper;
 import andreydem0505.remoteconfig.services.feature_flags.FeatureFlagService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class DynPropertyService {
     private final DynPropertyRepository dynPropertyRepository;
     private final DynPropertyValidationService validationService;
@@ -23,8 +22,20 @@ public class DynPropertyService {
     private final Cache cache;
     private final DynPropertyMapper dynPropertyMapper;
 
+    public DynPropertyService(DynPropertyRepository dynPropertyRepository,
+                              DynPropertyValidationService validationService,
+                              FeatureFlagService featureFlagService,
+                              @Qualifier(RedisConfig.DYN_PROPERTY_CACHE_QUALIFIER) Cache cache,
+                              DynPropertyMapper dynPropertyMapper) {
+        this.dynPropertyRepository = dynPropertyRepository;
+        this.validationService = validationService;
+        this.featureFlagService = featureFlagService;
+        this.cache = cache;
+        this.dynPropertyMapper = dynPropertyMapper;
+    }
+
     @CachePut(
-            value = RedisConfig.CACHE_NAME,
+            value = RedisConfig.DYN_PROPERTY_CACHE_NAME,
             key = "new org.springframework.cache.interceptor.SimpleKey(#username, #propertyName)"
     )
     public DynPropertyCache createDynProperty(String username, String propertyName, PropertyType type, Object data) {

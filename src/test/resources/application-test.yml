@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: RemoteConfig-Test
+  data:
+    mongodb:
+      auto-index-creation: true

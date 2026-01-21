@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: RemoteConfig
+  data:
+    redis:
+      port: ${REDIS_PORT}
+      host: ${REDIS_HOST}
+    mongodb:
+      uri: ${MONGODB_URI}
+      auto-index-creation: 'true'
+  cache:
+    type: redis
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    enable:
+      jvm: true
+      jetty: true
+      tomcat: false
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+server:
+  jetty:
+    threads:
+      max: 500
+      min: 50
+    connection-idle-timeout: 2000

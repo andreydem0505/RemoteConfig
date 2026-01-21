@@ -1,44 +1,50 @@
 package andreydem0505.remoteconfig.cache;
 
 import andreydem0505.remoteconfig.data.documents.PropertyType;
+import andreydem0505.remoteconfig.security.UserRole;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.util.Pool;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
-public class DynPropertyKryoSerializer implements RedisSerializer<DynPropertyCache> {
+public class ValueKryoSerializer implements RedisSerializer<Object> {
 
-    private static final ThreadLocal<Kryo> KRYO = ThreadLocal.withInitial(() -> {
-        Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(false);
-        kryo.register(DynPropertyCache.class, new KryoSerializer());
-        return kryo;
-    });
+    private static final Pool<Kryo> kryoPool = new Pool<>(true, false, 100) {
+        @Override
+        protected Kryo create() {
+            Kryo kryo = new Kryo();
+            kryo.setRegistrationRequired(false);
+            kryo.register(DynPropertyCache.class, new DynPropertyKryoSerializer());
+            kryo.register(UserCache.class);
+            kryo.register(String.class);
+            kryo.register(UserRole.class);
+            return kryo;
+        }
+    };
 
     @Override
-    public byte[] serialize(DynPropertyCache value) throws SerializationException {
-        Kryo kryo = KRYO.get();
+    public byte[] serialize(Object value) throws SerializationException {
         try (Output output = new Output(512, -1)) {
-            kryo.writeObject(output, value);
+            kryoPool.obtain().writeClassAndObject(output, value);
             return output.toBytes();
         } catch (Exception e) {
-            throw new SerializationException("Failed to serialize DynProperty", e);
+            throw new SerializationException("Failed to serialize value", e);
         }
     }
 
     @Override
-    public DynPropertyCache deserialize(byte[] bytes) throws SerializationException {
-        Kryo kryo = KRYO.get();
+    public Object deserialize(byte[] bytes) throws SerializationException {
         try (Input input = new Input(bytes)) {
-            return kryo.readObject(input, DynPropertyCache.class);
+            return kryoPool.obtain().readClassAndObject(input);
         } catch (Exception e) {
-            throw new SerializationException("Failed to deserialize DynProperty", e);
+            throw new SerializationException("Failed to deserialize value", e);
         }
     }
 
-    private static class KryoSerializer extends Serializer<DynPropertyCache> {
+    private static class DynPropertyKryoSerializer extends Serializer<DynPropertyCache> {
         @Override
         public void write(Kryo kryo, Output output, DynPropertyCache value) {
             kryo.writeObject(output, value.getType());
