@@ -4,14 +4,14 @@ import test_data from "./test_data.js";
 
 export const options = {
     stages: [
-        { duration: '1m', target: 20 },
-        { duration: '1m', target: 20 },
-        { duration: '1m', target: 50 },
-        { duration: '1m', target: 50 },
-        { duration: '1m', target: 100 },
-        { duration: '1m', target: 100 },
-        { duration: '1m', target: 300 },
-        { duration: '1m', target: 300 },
+        { duration: '30s', target: 20 },
+        { duration: '30s', target: 20 },
+        { duration: '30s', target: 50 },
+        { duration: '30s', target: 50 },
+        { duration: '30s', target: 100 },
+        { duration: '30s', target: 100 },
+        { duration: '1m', target: 500 },
+        { duration: '1m', target: 500 },
         { duration: '1m', target: 0 },
     ],
     thresholds: {

@@ -13,7 +13,8 @@ import java.util.Collection;
 public class DynPropertyValidationService {
 
     DynPropertyValidationService validateName(String name) {
-        if (name == null || name.isEmpty() || !name.matches("^[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)*$")) {
+        if (name == null || name.isEmpty() || !name.matches("^[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)*$")
+                || name.length() > 128) {
             throw new DynPropertyNameValidationException(name);
         }
         return this;

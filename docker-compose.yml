@@ -29,6 +29,23 @@ x-backend-build: &backend-build
   build:
     context: .
 
+x-backend-test-envs: &backend-test-envs
+    environment:
+      JAVA_OPTS: "\
+        -XX:ActiveProcessorCount=6 \
+        -XX:+UseContainerSupport \
+        -XX:+UseG1GC \
+        -XX:InitiatingHeapOccupancyPercent=50 \
+        -XX:MaxGCPauseMillis=150 \
+        -XX:ConcGCThreads=2 \
+        -XX:ParallelGCThreads=4 \
+        -Xms4g \
+        -Xmx4g \
+        -XX:+AlwaysPreTouch \
+        -XX:+PerfDisableSharedMem \
+        -XX:+ExitOnOutOfMemoryError \
+        -XX:StartFlightRecording=filename=/snapshots/profile.jfr"
+
 services:
   backend:
     <<: [ *backend-build, *restart-policy ]
@@ -39,8 +56,6 @@ services:
       - .env
     profiles: [ "production" ]
     healthcheck: *backend-healthcheck
-    volumes:
-      - ./snapshots:/snapshots
     depends_on:
       mongodb:
         condition: service_healthy
@@ -48,7 +63,7 @@ services:
         condition: service_healthy
 
   backend-test:
-    <<: [ *backend-build, *restart-policy ]
+    <<: [ *backend-build, *restart-policy, *backend-test-envs ]
     container_name: remote_config_backend_test
     ports:
       - "8080:8080"
