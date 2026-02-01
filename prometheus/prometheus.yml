@@ -12,4 +12,4 @@ scrape_configs:
   - job_name: 'spring-boot-application'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['backend-test:8080']
+      - targets: ['backend-load-test:8080']
