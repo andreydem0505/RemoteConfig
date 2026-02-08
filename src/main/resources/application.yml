@@ -41,6 +41,6 @@ management:
 server:
   jetty:
     threads:
-      max: 1_000
-      min: 250
+      max: 2_000
+      min: 1_200
     connection-idle-timeout: 2000
