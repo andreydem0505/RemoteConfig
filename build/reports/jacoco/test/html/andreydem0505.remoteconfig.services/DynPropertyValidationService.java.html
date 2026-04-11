@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DynPropertyValidationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">RemoteConfig</a> &gt; <a href="index.source.html" class="el_package">andreydem0505.remoteconfig.services</a> &gt; <span class="el_source">DynPropertyValidationService.java</span></div><h1>DynPropertyValidationService.java</h1><pre class="source lang-java linenums">package andreydem0505.remoteconfig.services;
+
+import andreydem0505.remoteconfig.data.documents.PropertyType;
+import andreydem0505.remoteconfig.exceptions.DynPropertyContextValidationException;
+import andreydem0505.remoteconfig.exceptions.DynPropertyDataValidationException;
+import andreydem0505.remoteconfig.exceptions.DynPropertyNameValidationException;
+import andreydem0505.remoteconfig.exceptions.DynPropertyTypeValidationException;
+import org.springframework.stereotype.Service;
+
+import java.util.Collection;
+
+@Service
+<span class="fc" id="L13">public class DynPropertyValidationService {</span>
+
+    DynPropertyValidationService validateName(String name) {
+<span class="fc bfc" id="L16" title="All 6 branches covered.">        if (name == null || name.isEmpty() || !name.matches(&quot;^[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)*$&quot;)</span>
+<span class="pc bpc" id="L17" title="1 of 2 branches missed.">                || name.length() &gt; 128) {</span>
+<span class="fc" id="L18">            throw new DynPropertyNameValidationException(name);</span>
+        }
+<span class="fc" id="L20">        return this;</span>
+    }
+
+    DynPropertyValidationService validateData(PropertyType type, Object data) {
+<span class="fc bfc" id="L24" title="All 5 branches covered.">        boolean validationResult = switch (type) {</span>
+<span class="fc" id="L25">            case CUSTOM_PROPERTY, EQUALITY_FEATURE_FLAG -&gt; true;</span>
+<span class="fc" id="L26">            case BOOLEAN_FEATURE_FLAG -&gt; data instanceof Boolean;</span>
+<span class="fc bfc" id="L27" title="All 6 branches covered.">            case PERCENTAGE_FEATURE_FLAG -&gt; data instanceof Integer i &amp;&amp; i &gt;= 0 &amp;&amp; i &lt;= 100;</span>
+<span class="fc" id="L28">            case UNIT_IN_LIST_FEATURE_FLAG, ALL_IN_LIST_FEATURE_FLAG, ANY_IN_LIST_FEATURE_FLAG -&gt; data instanceof Collection&lt;?&gt;;</span>
+<span class="fc" id="L29">            case STRING_CONTAINS_FEATURE_FLAG -&gt; data instanceof String;</span>
+        };
+
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (!validationResult) {</span>
+<span class="fc" id="L33">            throw new DynPropertyDataValidationException(type);</span>
+        }
+<span class="fc" id="L35">        return this;</span>
+    }
+
+    DynPropertyValidationService validateIsFeatureFlag(PropertyType type) {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        boolean validationResult = !type.equals(PropertyType.CUSTOM_PROPERTY);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (!validationResult) {</span>
+<span class="fc" id="L41">            throw new DynPropertyTypeValidationException(type);</span>
+        }
+<span class="fc" id="L43">        return this;</span>
+    }
+
+    DynPropertyValidationService validateContext(String name, PropertyType type, Object context, Object data) {
+<span class="fc bfc" id="L47" title="All 6 branches covered.">        boolean validationResult = switch (type) {</span>
+<span class="fc" id="L48">            case CUSTOM_PROPERTY -&gt; false;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            case BOOLEAN_FEATURE_FLAG, PERCENTAGE_FEATURE_FLAG -&gt; context == null;</span>
+<span class="fc" id="L50">            case EQUALITY_FEATURE_FLAG -&gt; true;</span>
+            case UNIT_IN_LIST_FEATURE_FLAG -&gt;
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">                    data instanceof Collection&lt;?&gt; collection &amp;&amp;</span>
+<span class="pc bpc" id="L53" title="1 of 4 branches missed.">                    (collection.isEmpty() ||</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">                            (context != null &amp;&amp; context.getClass().equals(collection.iterator().next().getClass())));</span>
+            case ALL_IN_LIST_FEATURE_FLAG, ANY_IN_LIST_FEATURE_FLAG -&gt;
+<span class="fc bfc" id="L56" title="All 2 branches covered.">                    data instanceof Collection&lt;?&gt; dataCollection &amp;&amp;</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">                    context instanceof Collection&lt;?&gt; contextCollection &amp;&amp;</span>
+<span class="fc bfc" id="L58" title="All 4 branches covered.">                    (dataCollection.isEmpty() || contextCollection.isEmpty() ||</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                            dataCollection.iterator().next().getClass().equals(contextCollection.iterator().next().getClass()));</span>
+<span class="fc" id="L60">            case STRING_CONTAINS_FEATURE_FLAG -&gt; context instanceof String;</span>
+        };
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (!validationResult) {</span>
+<span class="fc" id="L63">            throw new DynPropertyContextValidationException(name);</span>
+        }
+<span class="fc" id="L65">        return this;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

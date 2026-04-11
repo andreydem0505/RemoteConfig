@@ -62,10 +62,25 @@ dependencies {
     testImplementation 'org.testcontainers:mongodb'
 }
 
+tasks.register('copyTestReport', Copy) {
+    dependsOn test
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+    from 'build/reports/tests'
+    into 'docs'
+
+    doLast {
+        def srcDir = file('build/reports/tests')
+        if (srcDir.exists()) {
+            srcDir.deleteDir()
+        }
+    }
+}
+
 tasks.named('test') {
     environment env.allVariables()
     useJUnitPlatform()
-    finalizedBy jacocoTestReport
+    finalizedBy jacocoTestReport, copyTestReport
 }
 
 jacocoTestReport {
@@ -75,6 +90,7 @@ jacocoTestReport {
             fileTree(dir: it, exclude: [
                     '**/config/**',
                     '**/dto/**',
+                    '**/data/**',
                     '**/exceptions/**',
                     '**/*Application.*'
             ])

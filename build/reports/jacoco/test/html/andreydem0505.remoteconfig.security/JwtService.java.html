@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">RemoteConfig</a> &gt; <a href="index.source.html" class="el_package">andreydem0505.remoteconfig.security</a> &gt; <span class="el_source">JwtService.java</span></div><h1>JwtService.java</h1><pre class="source lang-java linenums">package andreydem0505.remoteconfig.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.function.Function;
+
+@Service
+public class JwtService {
+    private final SecretKey signKey;
+    private final JwtParser jwtParser;
+
+<span class="fc" id="L23">    public JwtService(@Value(&quot;${JWT_SECRET}&quot;) String secretKey) {</span>
+<span class="fc" id="L24">        this.signKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L25">        this.jwtParser = Jwts.parser()</span>
+<span class="fc" id="L26">                .verifyWith(signKey)</span>
+<span class="fc" id="L27">                .build();</span>
+<span class="fc" id="L28">    }</span>
+
+    public String extractUsername(String token) {
+<span class="nc" id="L31">        return extractClaim(token, Claims::getSubject);</span>
+    }
+
+    public String generateToken(UserDetails userDetails) {
+<span class="nc" id="L35">        return Jwts.builder()</span>
+<span class="nc" id="L36">                .subject(userDetails.getUsername())</span>
+<span class="nc" id="L37">                .issuedAt(new Date())</span>
+<span class="nc" id="L38">                .expiration(Date.from(Instant.now().plus(30, ChronoUnit.DAYS)))</span>
+<span class="nc" id="L39">                .signWith(signKey)</span>
+<span class="nc" id="L40">                .compact();</span>
+    }
+
+    public boolean isTokenValid(String token) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        return !isTokenExpired(token);</span>
+    }
+
+    private boolean isTokenExpired(String token) {
+<span class="nc" id="L48">        return extractAllClaims(token).getExpiration().before(new Date());</span>
+    }
+
+    private Claims extractAllClaims(String token) {
+<span class="nc" id="L52">        return jwtParser</span>
+<span class="nc" id="L53">                .parseSignedClaims(token)</span>
+<span class="nc" id="L54">                .getPayload();</span>
+    }
+
+    private &lt;T&gt; T extractClaim(String token, Function&lt;Claims, T&gt; claimsResolver) {
+<span class="nc" id="L58">        final Claims claims = extractAllClaims(token);</span>
+<span class="nc" id="L59">        return claimsResolver.apply(claims);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

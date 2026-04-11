@@ -1,5 +1,7 @@
 # Remote Configurations & Feature Flags Cloud Service
 
-![Build & Test](https://github.com/andreydem0505/RemoteConfig/workflows/Build%20&%20Test/badge.svg)
+[![Test Coverage](https://codecov.io/github/andreydem0505/RemoteConfig/branch/master/graph/badge.svg?token=VZ8E3CHJ47)](https://codecov.io/github/andreydem0505/RemoteConfig)
 
-[Load testing report](https://andreydem0505.github.io/RemoteConfig/load_test_report.html)
+[Unit Tests Report](https://andreydem0505.github.io/RemoteConfig/test/index.html)
+
+[Load Testing Report](https://andreydem0505.github.io/RemoteConfig/load_test_report.html)

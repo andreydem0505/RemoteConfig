@@ -1,6 +1,7 @@
-package andreydem0505.remoteconfig.security;
+package andreydem0505.remoteconfig.config;
 
 import andreydem0505.remoteconfig.controllers.Urls;
+import andreydem0505.remoteconfig.security.JwtAuthenticationFilter;
 import andreydem0505.remoteconfig.services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

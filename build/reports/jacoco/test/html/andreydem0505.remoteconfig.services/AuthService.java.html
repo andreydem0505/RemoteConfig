@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">RemoteConfig</a> &gt; <a href="index.source.html" class="el_package">andreydem0505.remoteconfig.services</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package andreydem0505.remoteconfig.services;
+
+import andreydem0505.remoteconfig.data.documents.User;
+import andreydem0505.remoteconfig.exceptions.UserNotFoundException;
+import andreydem0505.remoteconfig.security.JwtService;
+import andreydem0505.remoteconfig.security.UserRole;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
+
+    public void register(String username, String password) {
+<span class="nc" id="L22">        userService.saveUser(username, passwordEncoder.encode(password), UserRole.COMMON);</span>
+<span class="nc" id="L23">    }</span>
+
+    public String login(String username, String password) {
+<span class="nc" id="L26">        User user = userService.getUser(username);</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if (user == null) {</span>
+<span class="nc" id="L28">            throw new UserNotFoundException();</span>
+        }
+<span class="nc" id="L30">        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));</span>
+<span class="nc" id="L31">        return jwtService.generateToken(user);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

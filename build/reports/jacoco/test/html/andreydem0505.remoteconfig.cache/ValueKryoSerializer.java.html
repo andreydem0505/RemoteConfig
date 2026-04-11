@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValueKryoSerializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">RemoteConfig</a> &gt; <a href="index.source.html" class="el_package">andreydem0505.remoteconfig.cache</a> &gt; <span class="el_source">ValueKryoSerializer.java</span></div><h1>ValueKryoSerializer.java</h1><pre class="source lang-java linenums">package andreydem0505.remoteconfig.cache;
+
+import andreydem0505.remoteconfig.data.documents.PropertyType;
+import andreydem0505.remoteconfig.security.UserRole;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.util.Pool;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.SerializationException;
+
+<span class="fc" id="L13">public class ValueKryoSerializer implements RedisSerializer&lt;Object&gt; {</span>
+
+<span class="fc" id="L15">    private static final Pool&lt;Kryo&gt; kryoPool = new Pool&lt;&gt;(true, false, 100) {</span>
+        @Override
+        protected Kryo create() {
+<span class="nc" id="L18">            Kryo kryo = new Kryo();</span>
+<span class="nc" id="L19">            kryo.setRegistrationRequired(false);</span>
+<span class="nc" id="L20">            kryo.register(DynPropertyCache.class, new DynPropertyKryoSerializer());</span>
+<span class="nc" id="L21">            kryo.register(UserCache.class);</span>
+<span class="nc" id="L22">            kryo.register(String.class);</span>
+<span class="nc" id="L23">            kryo.register(UserRole.class);</span>
+<span class="nc" id="L24">            return kryo;</span>
+        }
+    };
+
+    @Override
+    public byte[] serialize(Object value) throws SerializationException {
+<span class="nc" id="L30">        try (Output output = new Output(512, -1)) {</span>
+<span class="nc" id="L31">            kryoPool.obtain().writeClassAndObject(output, value);</span>
+<span class="nc" id="L32">            return output.toBytes();</span>
+<span class="nc" id="L33">        } catch (Exception e) {</span>
+<span class="nc" id="L34">            throw new SerializationException(&quot;Failed to serialize value&quot;, e);</span>
+        }
+    }
+
+    @Override
+    public Object deserialize(byte[] bytes) throws SerializationException {
+<span class="nc" id="L40">        try (Input input = new Input(bytes)) {</span>
+<span class="nc" id="L41">            return kryoPool.obtain().readClassAndObject(input);</span>
+<span class="nc" id="L42">        } catch (Exception e) {</span>
+<span class="nc" id="L43">            throw new SerializationException(&quot;Failed to deserialize value&quot;, e);</span>
+        }
+    }
+
+    private static class DynPropertyKryoSerializer extends Serializer&lt;DynPropertyCache&gt; {
+        @Override
+        public void write(Kryo kryo, Output output, DynPropertyCache value) {
+<span class="nc" id="L50">            kryo.writeObject(output, value.getType());</span>
+<span class="nc" id="L51">            kryo.writeClassAndObject(output, value.getData());</span>
+<span class="nc" id="L52">        }</span>
+
+        @Override
+        public DynPropertyCache read(Kryo kryo, Input input, Class&lt;? extends DynPropertyCache&gt; type) {
+<span class="nc" id="L56">            PropertyType propertyType = kryo.readObject(input, PropertyType.class);</span>
+<span class="nc" id="L57">            Object data = kryo.readClassAndObject(input);</span>
+<span class="nc" id="L58">            return new DynPropertyCache(propertyType, data);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

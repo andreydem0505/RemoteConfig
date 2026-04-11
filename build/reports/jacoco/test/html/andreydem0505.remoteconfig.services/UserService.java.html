@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">RemoteConfig</a> &gt; <a href="index.source.html" class="el_package">andreydem0505.remoteconfig.services</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package andreydem0505.remoteconfig.services;
+
+import andreydem0505.remoteconfig.cache.RedisConfig;
+import andreydem0505.remoteconfig.cache.UserCache;
+import andreydem0505.remoteconfig.data.documents.User;
+import andreydem0505.remoteconfig.data.repositories.UserRepository;
+import andreydem0505.remoteconfig.exceptions.UserAlreadyExistsException;
+import andreydem0505.remoteconfig.mappers.UserMapper;
+import andreydem0505.remoteconfig.security.UserRole;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService implements UserDetailsService {
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final Cache cache;
+
+    public UserService(UserRepository userRepository,
+                       UserMapper userMapper,
+<span class="fc" id="L25">                       @Qualifier(RedisConfig.USER_CACHE_QUALIFIER) Cache cache) {</span>
+<span class="fc" id="L26">        this.userRepository = userRepository;</span>
+<span class="fc" id="L27">        this.userMapper = userMapper;</span>
+<span class="fc" id="L28">        this.cache = cache;</span>
+<span class="fc" id="L29">    }</span>
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+<span class="nc" id="L33">        User user = getUserCacheable(username);</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (user == null) {</span>
+<span class="nc" id="L35">            throw new UsernameNotFoundException(&quot;User not found&quot;);</span>
+        }
+<span class="nc" id="L37">        return user;</span>
+    }
+
+    public User getUser(String username) {
+<span class="nc" id="L41">        return getUserCacheable(username);</span>
+    }
+
+    public void saveUser(String username, String password, UserRole role) {
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (getUserCacheable(username) != null) {</span>
+<span class="nc" id="L46">            throw new UserAlreadyExistsException();</span>
+        }
+<span class="nc" id="L48">        User user = new User(username, password, role);</span>
+<span class="nc" id="L49">        userRepository.save(user);</span>
+<span class="nc" id="L50">        cache.put(username, userMapper.toCache(user));</span>
+<span class="nc" id="L51">    }</span>
+
+    private User getUserCacheable(String username) {
+<span class="nc" id="L54">        Cache.ValueWrapper wrapper = cache.get(username);</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (wrapper != null) {</span>
+<span class="nc" id="L56">            UserCache userCache = (UserCache) wrapper.get();</span>
+<span class="nc" id="L57">            return userMapper.fromCache(username, userCache);</span>
+        }
+<span class="nc" id="L59">        return userRepository.findByUsername(username);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
