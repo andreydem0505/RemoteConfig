@@ -249,6 +249,78 @@ const test_data = [
         context: 'alice'
     },
     {
+        type: 'ALL_IN_LIST_FEATURE_FLAG',
+        name: 'feature.required_permissions',
+        data: ['read', 'write', 'export'],
+        context: ['read', 'write']
+    },
+    {
+        type: 'ALL_IN_LIST_FEATURE_FLAG',
+        name: 'feature.required_scopes',
+        data: ['profile.read', 'orders.read', 'orders.write', 'notifications.read'],
+        context: ['orders.read', 'notifications.read']
+    },
+    {
+        type: 'ANY_IN_LIST_FEATURE_FLAG',
+        name: 'feature.target_segments',
+        data: ['beta', 'vip', 'internal'],
+        context: ['guest', 'vip']
+    },
+    {
+        type: 'ANY_IN_LIST_FEATURE_FLAG',
+        name: 'feature.country_segments',
+        data: ['US', 'DE', 'FR'],
+        context: ['PL', 'DE']
+    },
+    {
+        type: 'STRING_CONTAINS_FEATURE_FLAG',
+        name: 'routing.path_contains_api_v2',
+        data: '/api/v2/orders',
+        context: '/api/v2'
+    },
+    {
+        type: 'STRING_CONTAINS_FEATURE_FLAG',
+        name: 'feature.username_contains_admin',
+        data: 'team-admin-operator',
+        context: 'admin'
+    },
+    {
+        type: 'ALL_IN_LIST_FEATURE_FLAG',
+        name: 'feature.required_claims',
+        data: ['email_verified', 'mfa_enabled', 'tos_accepted'],
+        context: ['email_verified', 'tos_accepted']
+    },
+    {
+        type: 'ALL_IN_LIST_FEATURE_FLAG',
+        name: 'feature.release_gate_checks',
+        data: ['tests_passed', 'security_scan_passed', 'approval_received'],
+        context: ['tests_passed', 'approval_received']
+    },
+    {
+        type: 'ANY_IN_LIST_FEATURE_FLAG',
+        name: 'feature.allowed_device_types',
+        data: ['ios', 'android', 'web'],
+        context: ['tv', 'web']
+    },
+    {
+        type: 'ANY_IN_LIST_FEATURE_FLAG',
+        name: 'feature.partner_channels',
+        data: ['email', 'affiliate', 'reseller'],
+        context: ['organic', 'affiliate']
+    },
+    {
+        type: 'STRING_CONTAINS_FEATURE_FLAG',
+        name: 'routing.path_contains_checkout',
+        data: '/shop/checkout/summary',
+        context: 'checkout'
+    },
+    {
+        type: 'STRING_CONTAINS_FEATURE_FLAG',
+        name: 'feature.message_contains_urgent',
+        data: 'system-alert-urgent-priority',
+        context: 'urgent'
+    },
+    {
         type: 'CUSTOM_PROPERTY',
         name: 'ux.tour_steps',
         data: [

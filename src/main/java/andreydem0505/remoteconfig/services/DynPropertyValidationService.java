@@ -25,7 +25,8 @@ public class DynPropertyValidationService {
             case CUSTOM_PROPERTY, EQUALITY_FEATURE_FLAG -> true;
             case BOOLEAN_FEATURE_FLAG -> data instanceof Boolean;
             case PERCENTAGE_FEATURE_FLAG -> data instanceof Integer i && i >= 0 && i <= 100;
-            case UNIT_IN_LIST_FEATURE_FLAG -> data instanceof Collection<?>;
+            case UNIT_IN_LIST_FEATURE_FLAG, ALL_IN_LIST_FEATURE_FLAG, ANY_IN_LIST_FEATURE_FLAG -> data instanceof Collection<?>;
+            case STRING_CONTAINS_FEATURE_FLAG -> data instanceof String;
         };
 
         if (!validationResult) {
@@ -47,8 +48,16 @@ public class DynPropertyValidationService {
             case CUSTOM_PROPERTY -> false;
             case BOOLEAN_FEATURE_FLAG, PERCENTAGE_FEATURE_FLAG -> context == null;
             case EQUALITY_FEATURE_FLAG -> true;
-            case UNIT_IN_LIST_FEATURE_FLAG -> data instanceof Collection<?> collection &&
-                    (collection.isEmpty() || context.getClass().equals(collection.iterator().next().getClass()));
+            case UNIT_IN_LIST_FEATURE_FLAG ->
+                    data instanceof Collection<?> collection &&
+                    (collection.isEmpty() ||
+                            (context != null && context.getClass().equals(collection.iterator().next().getClass())));
+            case ALL_IN_LIST_FEATURE_FLAG, ANY_IN_LIST_FEATURE_FLAG ->
+                    data instanceof Collection<?> dataCollection &&
+                    context instanceof Collection<?> contextCollection &&
+                    (dataCollection.isEmpty() || contextCollection.isEmpty() ||
+                            dataCollection.iterator().next().getClass().equals(contextCollection.iterator().next().getClass()));
+            case STRING_CONTAINS_FEATURE_FLAG -> context instanceof String;
         };
         if (!validationResult) {
             throw new DynPropertyContextValidationException(name);

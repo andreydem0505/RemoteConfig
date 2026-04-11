@@ -18,10 +18,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -333,6 +336,84 @@ public class DynPropertyServiceTest extends TestBase {
         );
     }
 
+    // ALL_IN_LIST_FEATURE_FLAG tests
+    @ParameterizedTest(name = "Creates all in list flag with {1} data set")
+    @MethodSource("provideAllInListFlagValues")
+    void testCreateDynProperty_WhenAllInListFlag_ThenPropertyIsCreated(Collection<?> requiredValues, String description) {
+        String username = "policy.manager";
+        String propertyName = "required_permissions";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.ALL_IN_LIST_FEATURE_FLAG,
+                requiredValues);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty, "ALL_IN_LIST flag should be persisted for user '%s'".formatted(username));
+        assertInstanceOf(Collection.class, savedProperty.getData(), "Stored ALL_IN_LIST data for %s should be a collection".formatted(description));
+        Collection<?> savedValues = (Collection<?>) savedProperty.getData();
+        assertEquals(requiredValues.size(), savedValues.size(),
+                "Stored ALL_IN_LIST data size should match the source %s collection".formatted(description));
+        assertTrue(savedValues.containsAll(requiredValues) && requiredValues.containsAll(savedValues),
+                "Stored ALL_IN_LIST data should contain the same elements as source %s collection"
+                        .formatted(description));
+    }
+
+    private static Stream<Arguments> provideAllInListFlagValues() {
+        return Stream.of(
+                Arguments.of(new HashSet<>(Arrays.asList("read", "write", "delete")), "string permissions"),
+                Arguments.of(new HashSet<>(Arrays.asList(1001, 1002, 1003)), "integer user ids"),
+                Arguments.of(new HashSet<>(), "empty")
+        );
+    }
+
+    // ANY_IN_LIST_FEATURE_FLAG tests
+    @ParameterizedTest(name = "Creates any in list flag with {1} data list")
+    @MethodSource("provideAnyInListFlagValues")
+    void testCreateDynProperty_WhenAnyInListFlag_ThenPropertyIsCreated(List<?> allowedValues, String description) {
+        String username = "segmentation.manager";
+        String propertyName = "allowed_segments";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.ANY_IN_LIST_FEATURE_FLAG,
+                allowedValues);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty, "ANY_IN_LIST flag should be persisted for user '%s'".formatted(username));
+        assertEquals(allowedValues, savedProperty.getData(),
+                "Stored ANY_IN_LIST data should match the source %s list".formatted(description));
+    }
+
+    private static Stream<Arguments> provideAnyInListFlagValues() {
+        return Stream.of(
+                Arguments.of(Arrays.asList("beta", "early_access", "internal"), "string segment"),
+                Arguments.of(Arrays.asList(1, 3, 5, 7), "integer shard"),
+                Arguments.of(List.of(), "empty")
+        );
+    }
+
+    // STRING_CONTAINS_FEATURE_FLAG tests
+    @ParameterizedTest(name = "Creates string contains flag for {1}")
+    @MethodSource("provideStringContainsFlagValues")
+    void testCreateDynProperty_WhenStringContainsFlag_ThenPropertyIsCreated(String pattern, String description) {
+        String username = "routing.service";
+        String propertyName = "path_substring";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.STRING_CONTAINS_FEATURE_FLAG,
+                pattern);
+
+        DynProperty savedProperty = dynPropertyRepository.findByUsernameAndPropertyName(username, propertyName);
+        assertNotNull(savedProperty,
+                "STRING_CONTAINS flag should be persisted for user '%s'".formatted(username));
+        assertEquals(pattern, savedProperty.getData(),
+                "Stored STRING_CONTAINS pattern should match %s input".formatted(description));
+    }
+
+    private static Stream<Arguments> provideStringContainsFlagValues() {
+        return Stream.of(
+                Arguments.of("/api/v1", "api route"),
+                Arguments.of("premium", "subscription tier"),
+                Arguments.of("", "empty pattern")
+        );
+    }
+
     // checkHit tests for BOOLEAN_FEATURE_FLAG
     @ParameterizedTest(name = "Boolean flag value {0} returns {0} when checked")
     @ValueSource(booleans = {true, false})
@@ -464,6 +545,132 @@ public class DynPropertyServiceTest extends TestBase {
                         150,
                         false,
                         "Integer context not in list returns false"
+                )
+        );
+    }
+
+    // checkHit tests for ALL_IN_LIST_FEATURE_FLAG
+    @ParameterizedTest(name = "{3}")
+    @MethodSource("provideAllInListCheckHitData")
+    void testCheckHit_WhenAllInList_ThenReturnsExpectedValue(
+            Set<?> data,
+            List<?> context,
+            boolean expectedResult,
+            String description
+    ) {
+        String username = "policy.engine";
+        String propertyName = "required_roles";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.ALL_IN_LIST_FEATURE_FLAG, data);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, context);
+
+        assertEquals(expectedResult, result, description);
+    }
+
+    private static Stream<Arguments> provideAllInListCheckHitData() {
+        return Stream.of(
+                Arguments.of(
+                        new HashSet<>(Arrays.asList("admin", "editor", "auditor")),
+                        Arrays.asList("admin", "editor"),
+                        true,
+                        "Returns true when all required context roles are present in property data"
+                ),
+                Arguments.of(
+                        new HashSet<>(Arrays.asList("admin", "editor", "auditor")),
+                        Arrays.asList("admin", "viewer"),
+                        false,
+                        "Returns false when at least one context role is missing from property data"
+                ),
+                Arguments.of(
+                        new HashSet<>(Arrays.asList("admin", "editor")),
+                        List.of(),
+                        true,
+                        "Returns true for empty context because all zero elements are contained"
+                )
+        );
+    }
+
+    // checkHit tests for ANY_IN_LIST_FEATURE_FLAG
+    @ParameterizedTest(name = "{3}")
+    @MethodSource("provideAnyInListCheckHitData")
+    void testCheckHit_WhenAnyInList_ThenReturnsExpectedValue(
+            List<?> data,
+            List<?> context,
+            boolean expectedResult,
+            String description
+    ) {
+        String username = "targeting.engine";
+        String propertyName = "enabled_segments";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.ANY_IN_LIST_FEATURE_FLAG, data);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, context);
+
+        assertEquals(expectedResult, result, description);
+    }
+
+    private static Stream<Arguments> provideAnyInListCheckHitData() {
+        return Stream.of(
+                Arguments.of(
+                        Arrays.asList("beta", "vip", "internal"),
+                        Arrays.asList("anonymous", "vip"),
+                        true,
+                        "Returns true when at least one context segment exists in property data"
+                ),
+                Arguments.of(
+                        Arrays.asList("beta", "vip", "internal"),
+                        Arrays.asList("anonymous", "public"),
+                        false,
+                        "Returns false when no context segments intersect with property data"
+                ),
+                Arguments.of(
+                        Arrays.asList("beta", "vip"),
+                        List.of(),
+                        false,
+                        "Returns false for empty context because there is no intersection"
+                )
+        );
+    }
+
+    // checkHit tests for STRING_CONTAINS_FEATURE_FLAG
+    @ParameterizedTest(name = "{3}")
+    @MethodSource("provideStringContainsCheckHitData")
+    void testCheckHit_WhenStringContains_ThenReturnsExpectedValue(
+            String data,
+            String context,
+            boolean expectedResult,
+            String description
+    ) {
+        String username = "request.router";
+        String propertyName = "path_contains";
+
+        dynPropertyService.createDynProperty(username, propertyName, PropertyType.STRING_CONTAINS_FEATURE_FLAG, data);
+
+        boolean result = dynPropertyService.checkHit(username, propertyName, context);
+
+        assertEquals(expectedResult, result, description);
+    }
+
+    private static Stream<Arguments> provideStringContainsCheckHitData() {
+        return Stream.of(
+                Arguments.of(
+                        "/api/v1/orders",
+                        "/api/v1",
+                        true,
+                        "Returns true when data string contains context substring"
+                ),
+                Arguments.of(
+                        "premium_subscription",
+                        "basic",
+                        false,
+                        "Returns false when data string does not contain context substring"
+                ),
+                Arguments.of(
+                        "feature_flag",
+                        "",
+                        true,
+                        "Returns true when context is empty string because every string contains empty substring"
                 )
         );
     }

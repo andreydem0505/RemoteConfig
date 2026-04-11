@@ -2,13 +2,10 @@ package andreydem0505.remoteconfig.services.feature_flags;
 
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-
 @Component
-public class UnitInListFeatureFlagChecker implements FeatureFlagChecker {
+public class StringContainsFeatureFlagChecker implements FeatureFlagChecker {
     @Override
     public boolean checkHit(Object context, Object data) {
-        Collection<?> list = (Collection<?>) data;
-        return list.contains(context);
+        return ((String) data).contains((String) context);
     }
 }

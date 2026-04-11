@@ -11,6 +11,9 @@ public class FeatureFlagService {
     private final PercentageFeatureFlagChecker percentageFeatureFlagChecker;
     private final EqualityFeatureFlagService equalityFeatureFlagService;
     private final UnitInListFeatureFlagChecker unitInListFeatureFlagChecker;
+    private final AllInListFeatureFlagChecker allInListFeatureFlagChecker;
+    private final AnyInListFeatureFlagChecker anyInListFeatureFlagChecker;
+    private final StringContainsFeatureFlagChecker stringContainsFeatureFlagChecker;
 
     public boolean checkHit(PropertyType type, Object context, Object data) {
         FeatureFlagChecker checker = switch (type) {
@@ -18,6 +21,9 @@ public class FeatureFlagService {
             case PERCENTAGE_FEATURE_FLAG -> percentageFeatureFlagChecker;
             case EQUALITY_FEATURE_FLAG -> equalityFeatureFlagService;
             case UNIT_IN_LIST_FEATURE_FLAG -> unitInListFeatureFlagChecker;
+            case ALL_IN_LIST_FEATURE_FLAG -> allInListFeatureFlagChecker;
+            case ANY_IN_LIST_FEATURE_FLAG -> anyInListFeatureFlagChecker;
+            case STRING_CONTAINS_FEATURE_FLAG -> stringContainsFeatureFlagChecker;
             default -> null;
         };
         return checker.checkHit(context, data);

@@ -409,4 +409,254 @@ public class DynPropertyValidationServiceTest extends TestBase {
                 "CUSTOM_PROPERTY should not support context even when null"
         );
     }
+
+    // validateData tests for ALL_IN_LIST_FEATURE_FLAG
+    @Test
+    void testValidateData_WhenAllInListFlagWithStringList_ThenDoesNotThrowException() {
+        List<String> allowedPermissions = Arrays.asList("read", "write", "delete");
+        assertDoesNotThrow(
+                () -> validationService.validateData(PropertyType.ALL_IN_LIST_FEATURE_FLAG, allowedPermissions),
+                "ALL_IN_LIST_FEATURE_FLAG with string list should be valid"
+        );
+    }
+
+    @Test
+    void testValidateData_WhenAllInListFlagWithIntegerList_ThenDoesNotThrowException() {
+        List<Integer> allowedIds = Arrays.asList(100, 200, 300);
+        assertDoesNotThrow(
+                () -> validationService.validateData(PropertyType.ALL_IN_LIST_FEATURE_FLAG, allowedIds),
+                "ALL_IN_LIST_FEATURE_FLAG with integer list should be valid"
+        );
+    }
+
+    @Test
+    void testValidateData_WhenAllInListFlagWithEmptyList_ThenDoesNotThrowException() {
+        assertDoesNotThrow(
+                () -> validationService.validateData(PropertyType.ALL_IN_LIST_FEATURE_FLAG, Collections.emptyList()),
+                "ALL_IN_LIST_FEATURE_FLAG with empty list should be valid"
+        );
+    }
+
+    @ParameterizedTest(name = "ALL_IN_LIST_FEATURE_FLAG with {1} should throw exception")
+    @MethodSource("provideAllInListFlagInvalidData")
+    void testValidateData_WhenAllInListFlagWithInvalidData_ThenThrowsValidationException(Object data, String type) {
+        assertThrows(
+                DynPropertyDataValidationException.class,
+                () -> validationService.validateData(PropertyType.ALL_IN_LIST_FEATURE_FLAG, data),
+                "ALL_IN_LIST_FEATURE_FLAG with %s should throw validation exception".formatted(type)
+        );
+    }
+
+    private static Stream<Arguments> provideAllInListFlagInvalidData() {
+        return Stream.of(
+                Arguments.of("not_a_list", "string"),
+                Arguments.of(42, "integer"),
+                Arguments.of(null, "null")
+        );
+    }
+
+    // validateData tests for ANY_IN_LIST_FEATURE_FLAG
+    @Test
+    void testValidateData_WhenAnyInListFlagWithStringList_ThenDoesNotThrowException() {
+        List<String> allowedStatuses = Arrays.asList("active", "pending", "archived");
+        assertDoesNotThrow(
+                () -> validationService.validateData(PropertyType.ANY_IN_LIST_FEATURE_FLAG, allowedStatuses),
+                "ANY_IN_LIST_FEATURE_FLAG with string list should be valid"
+        );
+    }
+
+    @Test
+    void testValidateData_WhenAnyInListFlagWithIntegerList_ThenDoesNotThrowException() {
+        List<Integer> allowedPriorities = Arrays.asList(1, 2, 3, 4, 5);
+        assertDoesNotThrow(
+                () -> validationService.validateData(PropertyType.ANY_IN_LIST_FEATURE_FLAG, allowedPriorities),
+                "ANY_IN_LIST_FEATURE_FLAG with integer list should be valid"
+        );
+    }
+
+    @Test
+    void testValidateData_WhenAnyInListFlagWithEmptyList_ThenDoesNotThrowException() {
+        assertDoesNotThrow(
+                () -> validationService.validateData(PropertyType.ANY_IN_LIST_FEATURE_FLAG, Collections.emptyList()),
+                "ANY_IN_LIST_FEATURE_FLAG with empty list should be valid"
+        );
+    }
+
+    @ParameterizedTest(name = "ANY_IN_LIST_FEATURE_FLAG with {1} should throw exception")
+    @MethodSource("provideAnyInListFlagInvalidData")
+    void testValidateData_WhenAnyInListFlagWithInvalidData_ThenThrowsValidationException(Object data, String type) {
+        assertThrows(
+                DynPropertyDataValidationException.class,
+                () -> validationService.validateData(PropertyType.ANY_IN_LIST_FEATURE_FLAG, data),
+                "ANY_IN_LIST_FEATURE_FLAG with %s should throw validation exception".formatted(type)
+        );
+    }
+
+    private static Stream<Arguments> provideAnyInListFlagInvalidData() {
+        return Stream.of(
+                Arguments.of("not_a_list", "string"),
+                Arguments.of(99, "integer"),
+                Arguments.of(null, "null")
+        );
+    }
+
+    // validateData tests for STRING_CONTAINS_FEATURE_FLAG
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "localhost",
+            "production",
+            "feature-flag-pattern",
+            "simple",
+            "a",
+            ""
+    })
+    void testValidateData_WhenStringContainsFlagWithValidString_ThenDoesNotThrowException(String data) {
+        assertDoesNotThrow(
+                () -> validationService.validateData(PropertyType.STRING_CONTAINS_FEATURE_FLAG, data),
+                "STRING_CONTAINS_FEATURE_FLAG with string should be valid"
+        );
+    }
+
+    @ParameterizedTest(name = "STRING_CONTAINS_FEATURE_FLAG with {1} should throw exception")
+    @MethodSource("provideStringContainsFlagInvalidData")
+    void testValidateData_WhenStringContainsFlagWithInvalidData_ThenThrowsValidationException(Object data, String type) {
+        assertThrows(
+                DynPropertyDataValidationException.class,
+                () -> validationService.validateData(PropertyType.STRING_CONTAINS_FEATURE_FLAG, data),
+                "STRING_CONTAINS_FEATURE_FLAG with %s should throw validation exception".formatted(type)
+        );
+    }
+
+    private static Stream<Arguments> provideStringContainsFlagInvalidData() {
+        return Stream.of(
+                Arguments.of(123, "integer"),
+                Arguments.of(true, "boolean"),
+                Arguments.of(Arrays.asList("a", "b"), "list"),
+                Arguments.of(null, "null")
+        );
+    }
+
+    // validateContext tests for ALL_IN_LIST_FEATURE_FLAG
+    @Test
+    void testValidateContext_WhenAllInListFlagWithMatchingStringType_ThenDoesNotThrowException() {
+        List<String> requiredPermissions = Arrays.asList("read", "write", "delete");
+        assertDoesNotThrow(
+                () -> validationService.validateContext("required_permissions", PropertyType.ALL_IN_LIST_FEATURE_FLAG,
+                        List.of("read"), requiredPermissions),
+                "ALL_IN_LIST_FEATURE_FLAG with matching string context type should be valid"
+        );
+    }
+
+    @Test
+    void testValidateContext_WhenAllInListFlagWithMatchingIntegerType_ThenDoesNotThrowException() {
+        List<Integer> requiredRoleIds = Arrays.asList(1, 2, 3);
+        assertDoesNotThrow(
+                () -> validationService.validateContext("required_roles", PropertyType.ALL_IN_LIST_FEATURE_FLAG,
+                        List.of(1), requiredRoleIds),
+                "ALL_IN_LIST_FEATURE_FLAG with matching integer context type should be valid"
+        );
+    }
+
+    @Test
+    void testValidateContext_WhenAllInListFlagWithEmptyList_ThenDoesNotThrowException() {
+        assertDoesNotThrow(
+                () -> validationService.validateContext("any_permission", PropertyType.ALL_IN_LIST_FEATURE_FLAG,
+                        List.of("admin"), Collections.emptyList()),
+                "ALL_IN_LIST_FEATURE_FLAG with empty list should be valid"
+        );
+    }
+
+    @Test
+    void testValidateContext_WhenAllInListFlagWithMismatchedType_ThenThrowsValidationException() {
+        List<String> requiredPermissions = Arrays.asList("read", "write", "delete");
+        assertThrows(
+                DynPropertyContextValidationException.class,
+                () -> validationService.validateContext("required_permissions", PropertyType.ALL_IN_LIST_FEATURE_FLAG,
+                        100, requiredPermissions),
+                "ALL_IN_LIST_FEATURE_FLAG with mismatched context type should throw validation exception"
+        );
+    }
+
+    // validateContext tests for ANY_IN_LIST_FEATURE_FLAG
+    @Test
+    void testValidateContext_WhenAnyInListFlagWithMatchingStringType_ThenDoesNotThrowException() {
+        List<String> allowedStatuses = Arrays.asList("active", "pending", "completed");
+        assertDoesNotThrow(
+                () -> validationService.validateContext("user_status", PropertyType.ANY_IN_LIST_FEATURE_FLAG,
+                        List.of("active"), allowedStatuses),
+                "ANY_IN_LIST_FEATURE_FLAG with matching string context type should be valid"
+        );
+    }
+
+    @Test
+    void testValidateContext_WhenAnyInListFlagWithMatchingIntegerType_ThenDoesNotThrowException() {
+        List<Integer> allowedScores = Arrays.asList(80, 85, 90, 95, 100);
+        assertDoesNotThrow(
+                () -> validationService.validateContext("minimum_score", PropertyType.ANY_IN_LIST_FEATURE_FLAG,
+                        List.of(85), allowedScores),
+                "ANY_IN_LIST_FEATURE_FLAG with matching integer context type should be valid"
+        );
+    }
+
+    @Test
+    void testValidateContext_WhenAnyInListFlagWithEmptyList_ThenDoesNotThrowException() {
+        assertDoesNotThrow(
+                () -> validationService.validateContext("any_status", PropertyType.ANY_IN_LIST_FEATURE_FLAG,
+                        List.of("any_value"), Collections.emptyList()),
+                "ANY_IN_LIST_FEATURE_FLAG with empty list should be valid"
+        );
+    }
+
+    @Test
+    void testValidateContext_WhenAnyInListFlagWithMismatchedType_ThenThrowsValidationException() {
+        List<String> allowedCountries = Arrays.asList("US", "UK", "CA");
+        assertThrows(
+                DynPropertyContextValidationException.class,
+                () -> validationService.validateContext("user_country", PropertyType.ANY_IN_LIST_FEATURE_FLAG,
+                        42, allowedCountries),
+                "ANY_IN_LIST_FEATURE_FLAG with mismatched context type should throw validation exception"
+        );
+    }
+
+    // validateContext tests for STRING_CONTAINS_FEATURE_FLAG
+    @ParameterizedTest(name = "STRING_CONTAINS_FEATURE_FLAG with string context ''{0}'' should be valid")
+    @MethodSource("provideStringContainsFlagContextData")
+    void testValidateContext_WhenStringContainsFlagWithValidContext_ThenDoesNotThrowException(String context) {
+        assertDoesNotThrow(
+                () -> validationService.validateContext("path_pattern", PropertyType.STRING_CONTAINS_FEATURE_FLAG,
+                        context, "/api/v1"),
+                "STRING_CONTAINS_FEATURE_FLAG with string context should be valid"
+        );
+    }
+
+    private static Stream<String> provideStringContainsFlagContextData() {
+        return Stream.of(
+                "localhost",
+                "production-api",
+                "path/to/resource",
+                "email@example.com",
+                ""
+        );
+    }
+
+    @ParameterizedTest(name = "STRING_CONTAINS_FEATURE_FLAG with {1} context should throw exception")
+    @MethodSource("provideStringContainsFlagInvalidContext")
+    void testValidateContext_WhenStringContainsFlagWithInvalidContext_ThenThrowsValidationException(
+            Object context, String type) {
+        assertThrows(
+                DynPropertyContextValidationException.class,
+                () -> validationService.validateContext("pattern_check", PropertyType.STRING_CONTAINS_FEATURE_FLAG,
+                        context, "pattern_value"),
+                "STRING_CONTAINS_FEATURE_FLAG with %s context should throw validation exception".formatted(type)
+        );
+    }
+
+    private static Stream<Arguments> provideStringContainsFlagInvalidContext() {
+        return Stream.of(
+                Arguments.of(123, "integer"),
+                Arguments.of(true, "boolean"),
+                Arguments.of(Arrays.asList("a", "b"), "list"),
+                Arguments.of(null, "null")
+        );
+    }
 }
