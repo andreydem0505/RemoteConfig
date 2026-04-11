@@ -4,7 +4,7 @@
 
 ### REST API service combining Remote Configurations (Feature-Toggles) and Targeting management
 
-### [Client Library](https://github.com/andreydem0505/RemoteConfigJavaLib)
+### [See Client Library for usage examples](https://github.com/andreydem0505/RemoteConfigJavaLib)
 
 ### [Unit Testing Report](https://andreydem0505.github.io/RemoteConfig/test/index.html)
 
