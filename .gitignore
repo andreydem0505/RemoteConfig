@@ -42,3 +42,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+.DS_Store
+src/.DS_Store
+src/test/.DS_Store
+src/test/resources/.DS_Store
